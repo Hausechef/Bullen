@@ -1,0 +1,32 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "p-TaWSlpj23UXFctBHCjW"
+uri = "file://03_seed_crm_workers.txt"
+type = "text"
+title = "03_seed_crm_workers.sql"
+
+[[outputs]]
+id = "glTGPdlR-gscNOdMaDnah"
+uri = "file://bullenhaus_full_migration.txt"
+type = "text"
+title = "bullenhaus_full_migration.sql"
+
+[[outputs]]
+id = "BEfXLRRQjyNaKUN02Uch3"
+uri = "file://confirm_all_users.txt"
+type = "text"
+title = "confirm_all_users.sql"
+
+[[outputs]]
+id = "GRtWUGvnCHvrXyf3qNs_x"
+uri = "file://docs/trading-admin-manual.md"
+type = "text"
+title = "Trading Platform Admin Panel Manual"
+
+[[outputs]]
+id = "kHBkur9g_xDGv7Rg3sPRY"
+uri = "file://docs/crm-manual.md"
+type = "text"
+title = "CRM Manual for All Roles"

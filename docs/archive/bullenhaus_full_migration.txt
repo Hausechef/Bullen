@@ -1,0 +1,187 @@
+-- ============================================================
+-- BULLENHAUS — ПОЛНАЯ МИГРАЦИЯ ДЛЯ НОВОГО SUPABASE ПРОЕКТА
+-- Вставить целиком в: SQL Editor → New query → Run
+-- ============================================================
+
+
+-- ============================================================
+-- ЧАСТЬ 1: СХЕМА БАЗЫ ДАННЫХ
+-- ============================================================
+
+-- Удалить старые таблицы если есть (безопасно на чистом проекте)
+drop table if exists public.transactions cascade;
+drop table if exists public.users cascade;
+drop function if exists public.get_my_role() cascade;
+drop function if exists public.set_updated_at() cascade;
+drop function if exists public.handle_new_user() cascade;
+
+-- Helper: читает роль текущего пользователя без рекурсии RLS
+create or replace function public.get_my_role()
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select role from public.users where id = auth.uid();
+$$;
+
+-- Таблица пользователей (профиль + кошелёк + роль + KYC)
+create table public.users (
+  id              uuid primary key references auth.users(id) on delete cascade,
+  email           text not null unique,
+  full_name       text,
+  username        text,
+  display_name    text,
+  avatar_url      text,
+  role            text not null default 'client'
+                    check (role in ('client', 'agent', 'manager', 'director', 'admin')),
+  kyc_status      text not null default 'UNVERIFIED'
+                    check (kyc_status in ('UNVERIFIED', 'PENDING', 'VERIFIED', 'REJECTED')),
+  balance         numeric(18, 2) not null default 0,
+  realized_pnl    numeric(18, 2) not null default 0,
+  margin_used     numeric(18, 2) not null default 0,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+-- Таблица транзакций (депозиты / выводы)
+create table public.transactions (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references public.users(id) on delete cascade,
+  user_email   text,
+  user_name    text,
+  type         text not null
+                 check (type in ('Deposit', 'Withdrawal')),
+  status       text not null default 'Pending'
+                 check (status in ('Pending', 'Processing', 'Approved', 'Completed', 'Rejected')),
+  amount       numeric(18, 2) not null check (amount > 0),
+  currency     text not null default 'USD',
+  method       text
+                 check (method in ('Credit Card', 'IBAN Transfer', 'Payment Link', 'Other')),
+  instructions text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+-- Индексы
+create index transactions_user_id_idx    on public.transactions(user_id);
+create index transactions_status_idx     on public.transactions(status);
+create index transactions_created_at_idx on public.transactions(created_at desc);
+create index users_role_idx              on public.users(role);
+create index users_kyc_status_idx        on public.users(kyc_status);
+
+-- Триггер: обновляет updated_at при изменении строки
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger users_set_updated_at
+  before update on public.users
+  for each row execute function public.set_updated_at();
+
+create trigger transactions_set_updated_at
+  before update on public.transactions
+  for each row execute function public.set_updated_at();
+
+-- Триггер: автоматически создаёт профиль при регистрации
+create or replace function public.handle_new_user()
+returns trigger language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.users (id, email, full_name, display_name)
+  values (
+    new.id,
+    new.email,
+    new.raw_user_meta_data->>'full_name',
+    new.raw_user_meta_data->>'display_name'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Row Level Security
+alter table public.users        enable row level security;
+alter table public.transactions enable row level security;
+
+-- Политики: users
+create policy "users_select_own"           on public.users for select using (auth.uid() = id);
+create policy "users_select_admin_manager" on public.users for select using (get_my_role() in ('admin', 'manager', 'director'));
+create policy "users_update_own"           on public.users for update using (auth.uid() = id) with check (auth.uid() = id);
+create policy "users_update_admin"         on public.users for update using (get_my_role() = 'admin');
+create policy "users_insert_trigger_only"  on public.users for insert with check (auth.uid() = id);
+
+-- Политики: transactions
+create policy "transactions_select_own"           on public.transactions for select using (auth.uid() = user_id);
+create policy "transactions_select_admin_manager" on public.transactions for select using (get_my_role() in ('admin', 'manager', 'director'));
+create policy "transactions_insert_own"           on public.transactions for insert with check (auth.uid() = user_id);
+create policy "transactions_insert_admin"         on public.transactions for insert with check (get_my_role() = 'admin');
+create policy "transactions_update_admin"         on public.transactions for update using (get_my_role() = 'admin');
+create policy "transactions_update_manager"       on public.transactions for update using (get_my_role() = 'manager');
+
+
+-- ============================================================
+-- ЧАСТЬ 2: CRM-СОТРУДНИКИ — Aurelius Unified Trade Desk
+-- Запускать ПОСЛЕ того как все 15 аккаунтов созданы в Auth
+-- ============================================================
+
+do $$
+declare
+  worker record;
+begin
+  for worker in (
+    select * from (values
+      ('orion.voss@aurelius-desk.crm',    'Orion Voss',     'Orion',   'admin'),
+      ('selene.marwick@aurelius-desk.crm','Selene Marwick', 'Selene',  'director'),
+      ('damian.rye@aurelius-desk.crm',    'Damian Rye',     'Damian',  'director'),
+      ('nora.valen@aurelius-desk.crm',    'Nora Valen',     'Nora',    'manager'),
+      ('kaspar.elian@aurelius-desk.crm',  'Kaspar Elian',   'Kaspar',  'manager'),
+      ('mira.sable@aurelius-desk.crm',    'Mira Sable',     'Mira',    'agent'),
+      ('levin.cross@aurelius-desk.crm',   'Levin Cross',    'Levin',   'agent'),
+      ('aria.novak@aurelius-desk.crm',    'Aria Novak',     'Aria',    'agent'),
+      ('theo.marek@aurelius-desk.crm',    'Theo Marek',     'Theo',    'agent'),
+      ('ivana.reed@aurelius-desk.crm',    'Ivana Reed',     'Ivana',   'agent'),
+      ('roman.kade@aurelius-desk.crm',    'Roman Kade',     'Roman',   'agent'),
+      ('elara.finch@aurelius-desk.crm',   'Elara Finch',    'Elara',   'agent'),
+      ('milan.torr@aurelius-desk.crm',    'Milan Torr',     'Milan',   'agent'),
+      ('vera.lyon@aurelius-desk.crm',     'Vera Lyon',      'Vera',    'agent'),
+      ('soren.black@aurelius-desk.crm',   'Soren Black',    'Soren',   'agent')
+    ) as t(email, full_name, display_name, role)
+  ) loop
+    insert into public.users (id, email, full_name, display_name, role, kyc_status)
+    select au.id, worker.email, worker.full_name, worker.display_name, worker.role, 'VERIFIED'
+    from auth.users au
+    where au.email = worker.email
+    on conflict (id) do update set
+      full_name    = excluded.full_name,
+      display_name = excluded.display_name,
+      role         = excluded.role,
+      kyc_status   = 'VERIFIED',
+      updated_at   = now();
+
+    if not found then
+      raise notice 'WARNING: auth user not found for email: %', worker.email;
+    end if;
+  end loop;
+end $$;
+
+-- Проверка результата
+select id, email, full_name, role, kyc_status
+from public.users
+where email like '%@aurelius-desk.crm'
+order by case role
+  when 'admin'    then 1
+  when 'director' then 2
+  when 'manager'  then 3
+  when 'agent'    then 4
+  else 5 end, email;

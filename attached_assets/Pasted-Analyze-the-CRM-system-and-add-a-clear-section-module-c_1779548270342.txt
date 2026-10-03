@@ -1,0 +1,154 @@
+Analyze the CRM system and add a clear section/module called “AI Core Insights” that explains and prepares how AI can help inside the CRM.
+
+Important:
+- AI must assist CRM users, not replace human decisions.
+- AI must not approve deposits, withdrawals, KYC, balances, payments, or client status automatically.
+- AI must only generate recommendations, summaries, warnings, and insights.
+- All final actions must stay under Admin / Director / Manager approval.
+- Do not add fake data, demo logic, or simulated results.
+- Do not break the existing CRM architecture, roles, permissions, database, or UI.
+
+AI Core Insights should help the CRM in these areas:
+
+1. Client Summary
+AI should analyze each client card and generate a short summary:
+- registration data;
+- country;
+- phone number;
+- assigned agent;
+- deposit/withdrawal history;
+- activity status;
+- last contact;
+- current risk level;
+- important notes.
+
+2. Lead / Client Scoring
+AI should help score clients based on:
+- activity level;
+- deposit interest;
+- communication history;
+- responsiveness;
+- missing documents;
+- risk signals;
+- probability of conversion.
+
+The score should be shown as:
+- Hot
+- Warm
+- Cold
+- Risky
+- Needs attention
+
+3. Next Best Action
+AI should suggest what the agent should do next:
+- call the client;
+- send a follow-up message;
+- request missing information;
+- check deposit status;
+- remind about pending action;
+- escalate to manager;
+- mark as low priority.
+
+4. Call and Communication Analysis
+AI should help analyze calls, chat messages, emails, or uploaded notes:
+- summarize the conversation;
+- detect client intent;
+- detect objections;
+- detect interest in deposit;
+- detect dissatisfaction;
+- extract action items;
+- suggest next follow-up.
+
+5. Video / Interview / Interrogation Analysis
+AI should allow analysis of uploaded video or audio from calls, interviews, interrogations, or other sources when available:
+- transcribe speech;
+- summarize key points;
+- detect contradictions;
+- detect emotional tone;
+- identify important statements;
+- extract timeline of events;
+- mark parts that need human review.
+
+AI must not make final legal, financial, or compliance conclusions. It should only assist with analysis.
+
+6. Risk Alerts
+AI should generate alerts when it detects:
+- suspicious client behavior;
+- repeated failed deposits;
+- unusual withdrawal requests;
+- conflicting client information;
+- missing KYC data;
+- aggressive or suspicious communication;
+- high-risk country or payment pattern;
+- inactive but high-value client.
+
+7. Agent Productivity
+AI should help agents by:
+- creating follow-up reminders;
+- summarizing daily client activity;
+- showing clients that need attention today;
+- suggesting message templates;
+- preparing call scripts;
+- showing missed opportunities.
+
+8. Manager / Director Dashboard Insights
+AI should help managers and directors see:
+- which agents are performing well;
+- which clients need escalation;
+- which deposits are pending;
+- which withdrawals require review;
+- which leads are most valuable;
+- which agents have inactive clients;
+- overall CRM performance summary.
+
+9. Search and Knowledge Assistant
+AI should allow staff to ask questions inside CRM, for example:
+- “Show clients waiting for deposit approval”
+- “Which clients have not been contacted this week?”
+- “Which agents have the most active clients?”
+- “Summarize today’s CRM activity”
+- “Show risky withdrawal requests”
+
+10. Admin Panel AI Controls
+Add admin controls for AI:
+- enable/disable AI Core Insights;
+- select AI provider;
+- set API key;
+- control which roles can use AI;
+- limit AI usage by role;
+- view AI usage logs;
+- disable video/audio analysis if needed.
+
+Role Access:
+- Agent: sees AI insights only for assigned clients.
+- Manager: sees AI insights for agents/clients under their management.
+- Director: sees global CRM insights and performance.
+- Admin: controls AI settings, permissions, providers, and logs.
+- Super Admin: full access across CRM and trading platform if such role exists.
+
+UI Requirements:
+- Add AI Core Insights block on client card.
+- Add AI summary on CRM dashboard.
+- Add AI risk alerts section.
+- Add AI recommendations section.
+- Add AI activity summary for managers/directors.
+- Keep UI clean, professional, responsive, and role-based.
+
+Security Requirements:
+- AI must respect existing RLS, permissions, and role-based access.
+- AI must not expose KYC documents to unauthorized roles.
+- AI must not show clients from other agents.
+- AI must not modify database records without explicit user action.
+- AI must not approve or reject anything automatically.
+- Log all AI-generated outputs and user actions.
+
+Final Output Required:
+Before making changes, provide:
+1. What AI features can be added safely.
+2. What database tables/fields are needed.
+3. What UI sections need to be added.
+4. What permissions are required.
+5. What should NOT be automated.
+6. Step-by-step implementation plan.
+
+Do not implement anything without showing the plan first.

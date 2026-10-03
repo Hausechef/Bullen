@@ -1,0 +1,15 @@
+{
+  "buildCommand": "pnpm --filter @workspace/bullenhaus run build",
+  "outputDirectory": "artifacts/bullenhaus/dist/public",
+  "rewrites": [
+    {
+      "source": "/recovery",
+      "destination": "https://bullenhaus-recovery.vercel.app/recovery"
+    },
+    {
+      "source": "/recovery/:path*",
+      "destination": "https://bullenhaus-recovery.vercel.app/recovery/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

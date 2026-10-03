@@ -1,0 +1,8 @@
+project_id = "qktqfedvfqxhrtjnmzmi"
+
+[functions.ai-status]
+verify_jwt = false
+
+[functions.recovery-sync]
+# This endpoint uses a dedicated server-to-server secret and never accepts browser credentials.
+verify_jwt = false

@@ -1,0 +1,16 @@
+{
+  "name": "@workspace/api-functions",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --env-file=../.local/dev/server.env --import tsx dev-server.mjs",
+    "test": "node --import tsx --test \"**/*.test.ts\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.106.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:"
+  }
+}

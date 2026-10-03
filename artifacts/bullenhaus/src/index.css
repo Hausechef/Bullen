@@ -1,0 +1,520 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+/* =========================================================
+   BULLENHAUS — PREMIUM DARK DESIGN SYSTEM
+   Single source of truth. Private-banking / hedge-fund grade.
+   ========================================================= */
+@theme {
+  /* ---------- Typography ---------- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Display scale — luxury hero headings */
+  --text-display: clamp(2.25rem, 1.75rem + 2.5vw, 3.75rem);
+  --text-eyebrow: 0.625rem;
+
+  /* ---------- Brand — Gold & Platinum ---------- */
+  --color-gold: #D4AF37;
+  --color-gold-light: #F5E1A4;
+  --color-gold-dark: #A8862A;
+  --color-gold-soft: rgba(212, 175, 55, 0.12);
+  --color-gold-softer: rgba(212, 175, 55, 0.06);
+
+  /* Unified gold gradient — used everywhere gold shimmer is needed */
+  --gradient-gold: linear-gradient(135deg, #F5E1A4 0%, #D4AF37 50%, #A8862A 100%);
+  --gradient-gold-soft: linear-gradient(135deg, rgba(245,225,164,0.18) 0%, rgba(212,175,55,0.08) 100%);
+
+  /* ---------- Surfaces — warm charcoal with gold undertone ---------- */
+  --color-bg: #08080B;
+  --color-bg-2: #0C0C10;
+  --color-surface: #15151A;
+  --color-surface-2: #1E1E24;
+  --color-surface-3: #28282F;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-border-gold: rgba(212, 175, 55, 0.28);
+
+  /* ---------- Text ---------- */
+  --color-text: #E8E8EA;
+  --color-text-muted: rgba(232, 232, 234, 0.55);
+  --color-text-dim: rgba(232, 232, 234, 0.35);
+
+  /* ---------- Semantic ---------- */
+  --color-success: #10B981;
+  --color-success-soft: rgba(16, 185, 129, 0.10);
+  --color-danger: #FB7185;
+  --color-danger-soft: rgba(251, 113, 133, 0.10);
+  --color-warning: #EAB308;
+  --color-warning-soft: rgba(234, 179, 8, 0.10);
+  --color-info: #60A5FA;
+  --color-info-soft: rgba(96, 165, 250, 0.10);
+
+  /* Admin zone accent — decoupled from danger so admin rose ≠ destructive */
+  --color-admin-accent: #F43F5E;
+  --color-admin-accent-soft: rgba(244, 63, 94, 0.10);
+
+  /* =========================================================
+     SHADCN CANONICAL TOKENS — makes all 53 shadcn components
+     render in the Bullenhaus premium theme with ZERO per-file edits.
+     ========================================================= */
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+
+  --color-primary: var(--color-gold);
+  --color-primary-foreground: #0A0A0B;
+  --color-primary-border: rgba(212, 175, 55, 0.45);
+
+  --color-secondary: var(--color-surface-2);
+  --color-secondary-foreground: var(--color-text);
+  --color-secondary-border: var(--color-border-strong);
+
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: #FFF5F6;
+  --color-destructive-border: rgba(251, 113, 133, 0.35);
+
+  --color-muted: var(--color-surface-2);
+  --color-muted-foreground: var(--color-text-muted);
+
+  --color-accent: var(--color-gold-soft);
+  --color-accent-foreground: var(--color-gold-light);
+
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+
+  --color-popover: var(--color-surface-2);
+  --color-popover-foreground: var(--color-text);
+
+  --color-input: var(--color-border-strong);
+  --color-input-background: var(--color-surface-2);
+
+  /* Visible gold focus ring — was transparent, now premium */
+  --color-ring: rgba(212, 175, 55, 0.55);
+
+  --color-button-outline: var(--color-border-strong);
+  --color-badge-outline: var(--color-border-strong);
+
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+
+  /* =========================================================
+     LEGACY ALIASES — all point to canonical tokens now.
+     One value edit above updates every namespace.
+     ========================================================= */
+  /* Trading namespace */
+  --color-accent-primary: var(--color-gold);
+  --color-accent-secondary: var(--color-gold-light);
+  --color-accent-tertiary: var(--color-danger);
+  --color-accent-quaternary: var(--color-danger);
+  --color-surface-bg: var(--color-bg);
+  --color-border-glass: var(--color-border);
+  --color-trade-up: var(--color-success);
+  --color-trade-down: var(--color-danger);
+  --color-trade-up-bg: var(--color-success-soft);
+  --color-trade-down-bg: var(--color-danger-soft);
+
+  /* CRM / Aura namespace */
+  --color-aura-black: var(--color-bg);
+  --color-aura-graphite: var(--color-surface);
+  --color-aura-navy: var(--color-bg-2);
+  --color-aura-gold: var(--color-gold);
+  --color-aura-gold-light: var(--color-gold-light);
+  --color-aura-platinum: var(--color-text);
+  --color-aura-emerald: var(--color-success);
+  --color-aura-ruby: var(--color-danger);
+  --color-aura-warning: var(--color-warning);
+  --color-sidebar-bg: var(--color-bg-2);
+  --color-card-bg: var(--color-surface);
+  --color-glass-border: var(--color-border);
+
+  /* ---------- Premium Shadows ---------- */
+  --shadow-gold-glow: 0 0 24px rgba(212, 175, 55, 0.28);
+  --shadow-gold-soft: 0 8px 32px rgba(212, 175, 55, 0.10);
+  --shadow-elevated: 0 20px 50px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 0 0 rgba(255,255,255,0.03) inset, 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: 0 1px 0 0 rgba(255,255,255,0.05) inset, 0 20px 48px -10px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212,175,55,0.10);
+  --shadow-popover: 0 24px 64px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--color-border);
+  --shadow-button: 0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 14px -2px rgba(0,0,0,0.4);
+  --shadow-neon-gold: 0 0 20px rgba(212, 175, 55, 0.35);
+  --shadow-neon-emerald: 0 0 20px rgba(16, 185, 129, 0.3);
+  --shadow-neon-rose: 0 0 20px rgba(251, 113, 133, 0.3);
+  --shadow-neon-blue: 0 0 20px rgba(96, 165, 250, 0.3);
+  --shadow-neon-purple: 0 0 20px rgba(167, 139, 250, 0.3);
+
+  /* ---------- Transitions ---------- */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 150ms var(--ease-premium);
+  --transition-base: 220ms var(--ease-premium);
+  --transition-slow: 360ms var(--ease-premium);
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html, body, #root {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(212, 175, 55, 0.32);
+    color: #fff;
+  }
+
+  /* Clean mouse focus, visible keyboard focus ring (gold) */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+  *:focus-visible {
+    outline: 2px solid rgba(212, 175, 55, 0.7);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* Headings default to serif display */
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+  }
+
+  /* Premium scrollbar — slim, gold on hover */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.35);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+}
+
+/* =========================================================
+   COMPONENTS — semantic, reusable premium surfaces
+   ========================================================= */
+@layer components {
+  .surface {
+    background-color: #0A0A0E;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15);
+  }
+
+  .surface-2 {
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+  }
+
+  .surface-hover {
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+  }
+  .surface-hover:hover {
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 0 8px 40px rgba(212, 175, 55, 0.25);
+  }
+
+  .glass {
+    background-color: rgba(10, 10, 14, 0.82);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+  }
+
+  .glass-card {
+    background-color: #0A0A0E;
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15);
+    transition: all var(--transition-base);
+  }
+  .glass-card:hover {
+    box-shadow: 0 8px 40px rgba(212, 175, 55, 0.25);
+    border-color: rgba(212, 175, 55, 0.4);
+  }
+
+  /* Premium card — top gold hairline + elevated shadow */
+  .card-premium {
+    background-color: rgba(18, 18, 20, 0.85);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-premium::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
+    pointer-events: none;
+  }
+
+  .gold-gradient-text {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .btn-gold {
+    background: var(--gradient-gold);
+    color: #0a0a0b;
+    font-weight: 700;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    box-shadow: var(--shadow-button), 0 4px 16px rgba(212, 175, 55, 0.22);
+    letter-spacing: 0.01em;
+  }
+  .btn-gold:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-button), 0 10px 28px rgba(212, 175, 55, 0.36);
+  }
+  .btn-gold:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--shadow-button), 0 2px 8px rgba(212, 175, 55, 0.2);
+  }
+  .btn-gold:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: saturate(0.6);
+  }
+
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text);
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    transition: background var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+  }
+  .btn-ghost:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .input-dark {
+    width: 100%;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+  }
+  .input-dark::placeholder {
+    color: var(--color-text-dim);
+  }
+  .input-dark:focus {
+    outline: none;
+    border-color: rgba(212, 175, 55, 0.55);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+    background-color: var(--color-surface);
+  }
+  .input-dark:hover:not(:focus) {
+    border-color: var(--color-border-strong);
+  }
+
+  .label-eyebrow {
+    font-size: var(--text-eyebrow);
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  /* Reusable layout primitives */
+  .panel-shell {
+    max-width: 1280px;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .section-title {
+    font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+  }
+
+  .muted-caption {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+  }
+
+  .table-shell {
+    background-color: rgba(18, 18, 20, 0.8);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .table-head {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-text-muted);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+
+  .status-empty, .status-error, .status-loading {
+    min-height: 180px;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: rgba(18, 18, 20, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+  }
+}
+
+/* =========================================================
+   UTILITIES — premium helpers
+   ========================================================= */
+@layer utilities {
+  /* Slim gold scrollbar for inner panels */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.18);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.4);
+  }
+
+  /* Ambient gold/rose glow orbs — for hero sections & layouts */
+  .bg-ambient-gold {
+    position: absolute;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+  }
+  .bg-ambient-rose {
+    position: absolute;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(244,63,94,0.12) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+  }
+
+  /* 1px gold top hairline — luxury card signature */
+  .hairline-gold-top {
+    position: relative;
+  }
+  .hairline-gold-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.4), transparent);
+    pointer-events: none;
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Premium transition shorthand */
+  .transition-premium {
+    transition: all var(--transition-base);
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Subtle gold pulse for live indicators */
+  @keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(212,175,55,0); }
+  }
+  .animate-pulse-gold {
+    animation: pulse-gold 2s var(--ease-premium) infinite;
+  }
+
+  /* Seamless marquee ticker — two identical tracks translated by -50%.
+     Modern replacement for <marquee>; pauses on hover, respects reduced motion. */
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .animate-ticker {
+    animation: ticker-scroll var(--ticker-duration, 40s) linear infinite;
+    will-change: transform;
+  }
+  .ticker-group:hover .animate-ticker {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ticker {
+      animation: none;
+      transform: none;
+    }
+  }
+}

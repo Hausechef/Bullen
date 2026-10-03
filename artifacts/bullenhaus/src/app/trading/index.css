@@ -1,0 +1,30 @@
+/* Trading module styles — inherits global tokens from /src/index.css.
+   Only module-specific component utilities live here. */
+
+@reference "tailwindcss";
+
+@layer components {
+  .gauge-container {
+    @apply relative w-full h-28 flex items-end justify-center overflow-hidden;
+  }
+
+  .gauge-arc {
+    @apply absolute w-44 h-44 rounded-full border-[12px] border-white/5;
+  }
+
+  .holo-border {
+    position: relative;
+  }
+  .holo-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(to bottom right, rgba(212,175,55,0.4), rgba(212,175,55,0.02));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}

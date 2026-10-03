@@ -1,0 +1,74 @@
+# Local Bullenhaus instance restored from the supplied cloud backup.
+project_id = "bullenhaus-local"
+
+[api]
+enabled = true
+port = 54331
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54332
+shadow_port = 54330
+major_version = 17
+health_timeout = "3m"
+
+# The historical migration directory is partial; bootstrap from the full backup.
+[db.migrations]
+enabled = false
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54333
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54334
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+[storage.s3_protocol]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**", "http://127.0.0.1:3000/**"]
+enable_signup = true
+minimum_password_length = 8
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+inspector_port = 8084
+deno_version = 2
+
+[analytics]
+enabled = false
+
+[functions.ai-chat]
+entrypoint = "../artifacts/bullenhaus/supabase/functions/ai-chat/index.ts"
+verify_jwt = true
+[functions.ai-status]
+entrypoint = "../artifacts/bullenhaus/supabase/functions/ai-status/index.ts"
+verify_jwt = true
+[functions.crm-sync]
+entrypoint = "../artifacts/bullenhaus/supabase/functions/crm-sync/index.ts"
+verify_jwt = true
+[functions.crm-workers]
+entrypoint = "../artifacts/bullenhaus/supabase/functions/crm-workers/index.ts"
+verify_jwt = true
+[functions.data-export]
+entrypoint = "../artifacts/bullenhaus/supabase/functions/data-export/index.ts"
+verify_jwt = true

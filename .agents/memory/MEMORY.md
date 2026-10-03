@@ -1,0 +1,1 @@
+- [Bullenhaus CRM setup](bullenhaus-crm.md) — Supabase project, accounts, tables, and CRM fix decisions

@@ -1,0 +1,270 @@
+.portal-landing {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #090806;
+}
+
+.portal-landing__background {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  user-select: none;
+  pointer-events: none;
+  animation: portal-background-arrival 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.portal-landing__atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, transparent 42%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(ellipse 55% 42% at 50% 101%, rgba(0, 0, 0, 0.26), transparent 74%);
+  box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.26);
+}
+
+.portal-actions {
+  align-self: end;
+  justify-self: center;
+  display: flex;
+  gap: clamp(1.2rem, 4vw, 4.5rem);
+  width: min(90vw, 780px);
+  padding: 0 1rem max(2.25rem, 7svh);
+  perspective: 1100px;
+}
+
+.portal-card {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --light-x: 50%;
+  --light-y: 0%;
+  --glass-fill: rgba(0, 0, 0, 0.2);
+  --edge: rgba(255, 255, 255, 0.28);
+  --edge-soft: rgba(255, 255, 255, 0.08);
+  --label: #fffaf0;
+  --depth: rgba(0, 0, 0, 0.82);
+
+  position: relative;
+  display: grid;
+  flex: 1 1 0;
+  min-width: 0;
+  height: clamp(6.25rem, 10vw, 7.5rem);
+  place-items: center;
+  border: 1px solid var(--edge);
+  border-radius: 1.35rem;
+  color: var(--label);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(0) translateZ(0);
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.85, 0.25, 1),
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.36) inset,
+    0 -1px 0 var(--edge-soft) inset,
+    0 12px 0 -5px var(--depth),
+    0 24px 34px -13px rgba(0, 0, 0, 0.84);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  animation: portal-card-arrival 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform;
+}
+
+.portal-card:disabled {
+  cursor: default;
+}
+
+.portal-card:nth-child(2) {
+  animation-delay: 110ms;
+}
+
+.portal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid var(--edge-soft);
+  border-radius: 1rem;
+  transform: translateZ(9px);
+  pointer-events: none;
+}
+
+.portal-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--light-x) var(--light-y),
+    rgba(255, 255, 255, 0.34),
+    transparent 42%
+  );
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  transform: translateZ(2px);
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.portal-card__glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--glass-fill);
+  transform: translateZ(0);
+}
+
+.portal-card__glass::after {
+  content: '';
+  position: absolute;
+  inset: -70% -20%;
+  background: linear-gradient(105deg, transparent 36%, rgba(255, 255, 255, 0.3) 49%, transparent 62%);
+  transform: translateX(-64%) rotate(4deg);
+  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.portal-card__label {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateZ(28px);
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.7);
+}
+
+.portal-card__brand {
+  margin-bottom: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: clamp(0.5rem, 0.75vw, 0.66rem);
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.portal-card__title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 2.8vw, 2.35rem);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.portal-card--recovery {
+  --glass-fill: rgba(0, 0, 0, 0.2);
+  --edge: rgba(255, 231, 176, 0.27);
+  --edge-soft: rgba(255, 255, 255, 0.09);
+  --depth: rgba(0, 0, 0, 0.88);
+  background: linear-gradient(145deg, rgba(18, 17, 15, 0.2), rgba(0, 0, 0, 0.2));
+}
+
+.portal-card--trade {
+  --glass-fill: rgba(215, 155, 42, 0.2);
+  --edge: rgba(255, 232, 162, 0.82);
+  --edge-soft: rgba(255, 247, 215, 0.24);
+  --label: #fff8e5;
+  --depth: rgba(95, 48, 5, 0.84);
+  background:
+    linear-gradient(145deg, rgba(255, 224, 143, 0.2), rgba(203, 121, 22, 0.2)),
+    rgba(191, 125, 24, 0.2);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.62) inset,
+    0 -1px 0 rgba(111, 59, 8, 0.28) inset,
+    0 12px 0 -5px var(--depth),
+    0 25px 38px -12px rgba(84, 43, 4, 0.72),
+    0 0 32px rgba(247, 179, 49, 0.22);
+}
+
+.portal-card:hover {
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-7px) translateZ(18px);
+}
+
+.portal-card:hover::after {
+  opacity: 0.9;
+}
+
+.portal-card:hover .portal-card__glass::after {
+  transform: translateX(64%) rotate(4deg);
+}
+
+.portal-card:active {
+  transform: rotateX(calc(var(--tilt-x) * 0.45)) rotateY(calc(var(--tilt-y) * 0.45)) translateY(3px) translateZ(4px);
+  transition-duration: 80ms;
+}
+
+.portal-card:focus-visible {
+  border-color: #fff3c2;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 12px 0 -5px var(--depth),
+    0 0 0 4px rgba(255, 218, 116, 0.48),
+    0 24px 36px -12px rgba(0, 0, 0, 0.82);
+}
+
+@keyframes portal-background-arrival {
+  from { opacity: 0; transform: scale(1.035); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes portal-card-arrival {
+  from { opacity: 0; transform: translateY(45px) rotateX(-9deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+@media (max-width: 640px) {
+  .portal-landing__background {
+    object-position: 50% center;
+  }
+
+  .portal-actions {
+    flex-direction: column;
+    gap: 1rem;
+    width: min(88vw, 25rem);
+    padding-bottom: max(1.5rem, 4svh);
+  }
+
+  .portal-card {
+    flex: none;
+    width: 100%;
+    height: 5.25rem;
+    border-radius: 1.1rem;
+  }
+
+  .portal-card::before {
+    inset: 0.35rem;
+    border-radius: 0.82rem;
+  }
+
+  .portal-card__brand {
+    margin-bottom: 0.22rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-landing__background,
+  .portal-card {
+    animation: none;
+  }
+
+  .portal-card,
+  .portal-card__glass::after {
+    transition: none;
+  }
+}

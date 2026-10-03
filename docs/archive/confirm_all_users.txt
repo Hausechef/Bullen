@@ -1,0 +1,14 @@
+-- ============================================================
+-- Подтвердить все существующие email аккаунты
+-- Supabase Dashboard → SQL Editor → New query → Run
+-- ============================================================
+
+-- 1. Подтвердить email у всех неподтверждённых пользователей
+update auth.users
+set email_confirmed_at = now()
+where email_confirmed_at is null;
+
+-- 2. Проверка — должно вернуть 0 неподтверждённых
+select count(*) as unconfirmed
+from auth.users
+where email_confirmed_at is null;

@@ -1,0 +1,14 @@
+# Keep test files out of the Vercel deployment: anything under api/**/*.test.ts
+# would otherwise be picked up by Vercel's zero-config function detection and
+# published as a bogus serverless endpoint (e.g. /api/kyc/analyze-external.test).
+**/*.test.ts
+**/*.test.tsx
+
+# Local runtime state, database backups, generated reports and UI captures must
+# never be part of a production deployment upload.
+.local/
+output/
+attached_assets/
+.playwright-cli/
+.canvas/
+final_audit/

@@ -1,0 +1,21 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.103.0"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.103.0": "513f5e7364668df19963929fd207a721e659e5c69875d8f1c1fe44b0a95d534d"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@eslint/js@^10.0.1",
+        "npm:eslint-plugin-react-hooks@^7.1.1",
+        "npm:eslint@^10.7.0",
+        "npm:prettier@^3.8.3",
+        "npm:typescript-eslint@^8.64.0",
+        "npm:typescript@~5.9.3"
+      ]
+    }
+  }
+}

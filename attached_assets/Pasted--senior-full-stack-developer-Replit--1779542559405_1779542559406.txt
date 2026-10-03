@@ -1,0 +1,67 @@
+Работай как senior full-stack developer в Replit.
+
+Не ломай архитектуру, не переписывай проект с нуля, не удаляй существующий функционал. Делай минимальные безопасные изменения. Не добавляй реальные API keys, не коммить .env/secrets/tokens. API keys не должны попадать на frontend. Upload уже работает — не ломай. Time-lapse уже работает — только проверь, чтобы не зависал.
+
+Исправь по этапам:
+
+1. UI/layout:
+- окно “Btc / USDT” не должно перекрывать другие окна;
+- убрать синюю линию/рамку;
+- footer только в самом низу, не fixed/sticky;
+- mobile blocks должны отображаться полностью и не обрезаться.
+
+2. Stability/performance:
+- проверить time-lapse на зависания;
+- проверить timers/polling/WebSocket/API cleanup;
+- ускорить вкладки, убрать лишние re-render и дублирующие запросы.
+
+3. Contact Support:
+- все сообщения должны приходить в Traid admin panel;
+- сохранять email, тему, текст, дату, статус и вложения, если есть.
+
+4. CRM Deposit bug:
+- когда клиент делает депозит, он виден во вкладке клиента CRM;
+- но Director Dashboard и Manager Dashboard показывают Total Deposit = 0;
+- найти причину, почему депозит не попадает в dashboard totals;
+- исправить aggregation/API/frontend mapping;
+- Director Dashboard должен считать total deposits корректно;
+- Manager Dashboard должен считать total deposits по своим клиентам корректно;
+- не ломать вкладку клиента, где депозит уже виден.
+
+5. Traid AI:
+- добавить AI provider settings для Traid;
+- OpenRouter, Gemini, OpenAI, Custom;
+- API key маскировать и хранить только backend-side.
+
+6. AI live chat:
+- добавить chat widget;
+- ответы только через backend API;
+- provider брать из настроек;
+- chat не должен перекрывать UI.
+
+7. CRM AI:
+- добавить отдельные CRM AI provider settings;
+- OpenRouter, Gemini, OpenAI, Custom;
+- настройки CRM должны быть независимы от Traid.
+
+8. AI Core Insights:
+- добавить только в CRM admin panel;
+- не добавлять в Traid;
+- модуль должен анализировать лиды, клиентов, сделки, задачи, коммуникации и эффективность команды;
+- показывать title, summary, category, priority, recommended action, related entity, created date;
+- если данных мало: “Not enough CRM data to generate insights.”
+- если provider не подключён: “Connect an AI provider in CRM AI Settings to enable AI Core Insights.”
+- не выдумывать данные.
+
+После каждого этапа давай отчёт:
+- что изменено;
+- какие файлы изменены;
+- как проверить.
+
+В конце:
+- проверь build/lint/tests;
+- проверь desktop/mobile;
+- проверь secrets;
+- сделай commit:
+fix: improve crm deposits responsive layout ai chat and insights
+- сделай git push.

@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Boring Company × BULLENHAUS — Premarket Contract</title>
+<style>
+  :root{
+    --ink:#101820;
+    --navy:#0d1b34;
+    --gold:#c8a24a;
+    --light:#f3f5f8;
+    --line:#cfd5dc;
+    --muted:#5f6b7a;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;
+    background:#dfe3e8;
+    font-family:Arial,Helvetica,sans-serif;
+    color:var(--ink);
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .document{padding:14px 0}
+  .page{
+    position:relative;
+    width:min(100vw,794px);
+    aspect-ratio:1241/1754;
+    margin:0 auto 14px;
+    background:#fff;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    overflow:hidden;
+    padding:58px 54px 54px 74px;
+  }
+  .page:before{
+    content:"";
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:20px;background:var(--navy);
+  }
+  .page:after{
+    content:"";
+    position:absolute;
+    left:20px;top:0;bottom:0;
+    width:12px;background:#adb4bd;
+  }
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:28px;
+  }
+  .brand{
+    font-weight:800;
+    font-size:30px;
+    letter-spacing:.5px;
+    color:var(--ink);
+  }
+  .brand span{color:var(--gold)}
+  .collab{
+    text-align:right;
+    font-size:12px;
+    line-height:1.35;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .collab strong{display:block;color:var(--gold);font-size:14px}
+  h1{
+    font-size:29px;
+    line-height:1.08;
+    margin:0 0 18px;
+  }
+  h2{
+    font-size:17px;
+    margin:16px 0 8px;
+    background:#eef0f4;
+    padding:7px 10px;
+    font-weight:700;
+  }
+  h3{
+    font-size:14px;
+    margin:12px 0 5px;
+  }
+  p,li{
+    font-size:11.4px;
+    line-height:1.42;
+    color:#3d4653;
+  }
+  p{margin:0 0 9px}
+  ul{margin:7px 0 12px 18px;padding:0}
+  .offer{
+    margin:18px 0;
+    background:#eef0f4;
+    border-right:52px solid var(--navy);
+    padding:16px 18px;
+  }
+  .offer-title{
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .offer-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 24px;
+  }
+  .meta{
+    display:grid;
+    grid-template-columns:1fr 1.2fr;
+    gap:8px 14px;
+    align-items:center;
+  }
+  .meta label{
+    font-size:13px;
+    color:#4e5968;
+  }
+  .value{
+    min-height:30px;
+    background:#fff;
+    border:1px solid #e1e5ea;
+    padding:7px 10px;
+    font-size:13px;
+    font-weight:700;
+  }
+  .columns{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  .field{
+    margin:8px 0 11px;
+  }
+  .field label{
+    display:block;
+    font-size:10px;
+    color:#566171;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  .field input{
+    width:100%;
+    border:1px solid #9ea7b3;
+    background:rgba(255,255,255,.92);
+    padding:8px 9px;
+    font-size:12px;
+    outline:none;
+  }
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .signature-box{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:28px;
+    margin-top:24px;
+  }
+  .signature-line{
+    height:48px;
+    border-bottom:1px solid #333;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    padding-bottom:5px;
+    font-family:"Brush Script MT","Segoe Script",cursive;
+    font-size:18px;
+  }
+  .caption{
+    font-size:10px;
+    color:#596273;
+    margin-top:4px;
+  }
+  .watermark{
+    position:absolute;
+    left:28%;
+    top:48%;
+    transform:rotate(-10deg);
+    font-size:64px;
+    font-weight:800;
+    color:rgba(13,27,52,.05);
+    pointer-events:none;
+  }
+  .footer{
+    position:absolute;
+    left:74px;
+    right:54px;
+    bottom:24px;
+    display:flex;
+    justify-content:space-between;
+    border-top:1px solid #9299a3;
+    padding-top:8px;
+    font-size:9px;
+    color:#67707d;
+  }
+  .small{font-size:9.7px}
+  .hero{
+    border-top:1px solid #cfd5dc;
+    padding-top:28px;
+    margin-top:8px;
+  }
+  .hero h1{font-size:35px}
+  .tagline{
+    font-size:15px;
+    color:#4c5664;
+    margin-bottom:20px;
+  }
+  .notice{
+    border:1px solid #d8c58d;
+    background:#fff8e7;
+    padding:12px;
+    margin-top:14px;
+  }
+  @media print{
+    html,body{background:#fff}
+    .document{padding:0}
+    .page{
+      width:210mm;
+      height:297mm;
+      margin:0;
+      box-shadow:none;
+      page-break-after:always;
+    }
+    .page:last-child{page-break-after:auto}
+  }
+  @media(max-width:900px){
+    .page{width:100%;height:auto;aspect-ratio:auto;min-height:1120px;padding:34px 24px 70px 46px;box-shadow:none}
+    .columns,.offer-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main class="document">
+
+<section class="page">
+  <div class="header">
+    <div class="brand">THE BORING COMPANY</div>
+    <div class="collab"><strong>× BULLENHAUS</strong>Premarket Collaboration Agreement</div>
+  </div>
+
+  <div class="hero">
+    <h1>ZEICHNUNGSVEREINBARUNG<br>FÜR VORZUGSAKTIEN</h1>
+    <p class="tagline">
+      Der Anleger zeichnet hiermit Vorzugsaktien der The Boring Company im Rahmen einer privaten Platzierung.
+      Diese Vereinbarung wird in Zusammenarbeit mit BULLENHAUS dokumentiert.
+    </p>
+  </div>
+
+  <div class="offer">
+    <div class="offer-title">ANGEBOT FÜR DIE ZEICHNUNG VON VORZUGSAKTIEN</div>
+    <div class="offer-grid">
+      <div>
+        <h3>EMITTENT</h3>
+        <p>The Boring Company</p>
+        <p class="small">Private company / premarket allocation</p>
+      </div>
+      <div class="meta">
+        <label>Betrag:</label><div class="value" data-bind="amount"></div>
+        <label>Anzahl der Aktien:</label><div class="value" data-bind="quantity"></div>
+        <label>Preis pro Aktie:</label><div class="value" data-bind="price"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>ZEICHNUNGSVEREINBARUNG, KAUFPREIS</h2>
+  <p>
+    Der Käufer erklärt, die Wertpapiere zu dem oben festgelegten Preis pro Aktie zu kaufen und die
+    erforderlichen Zeichnungsunterlagen sowie den Kaufpreis nach den vereinbarten Zahlungsanweisungen
+    bereitzustellen. Nach Annahme der Zeichnung wird dem Käufer innerhalb eines angemessenen Zeitraums
+    eine Bestätigung über die zugeteilten Aktien ausgestellt.
+  </p>
+
+  <h2>ANGABEN UND VERPFLICHTUNGEN DES UNTERNEHMENS</h2>
+  <h3>Organisation und Verfassung</h3>
+  <p>
+    Das Unternehmen ist eine nach dem anwendbaren Recht der Vereinigten Staaten organisierte private
+    Gesellschaft und verfügt über die erforderlichen Befugnisse zur Durchführung der in dieser Vereinbarung
+    beschriebenen Transaktion.
+  </p>
+
+  <h3>Ermächtigung</h3>
+  <p>
+    Das Unternehmen hat die internen Maßnahmen getroffen, die erforderlich sind, um diese Vereinbarung
+    abzuschließen und die vereinbarten Rechte und Pflichten umzusetzen.
+  </p>
+
+  <h2>GARANTIEN UND VEREINBARUNGEN</h2>
+  <h3>Umfangreiche Information</h3>
+  <p>
+    Der Käufer bestätigt, dass ihm ausreichende Informationen über das Investment zur Verfügung gestellt
+    wurden und dass er die Chancen und Risiken der Investition verstanden hat.
+  </p>
+
+  <h3>Gesetzliche Haltesperre / Restricted Shares</h3>
+  <p>
+    Dem Käufer ist bewusst, dass es sich um nicht öffentlich gehandelte Wertpapiere handeln kann und dass
+    deren Übertragbarkeit gesetzlichen, vertraglichen oder regulatorischen Beschränkungen unterliegen kann.
+  </p>
+
+  <div class="watermark">THE BORING COMPANY</div>
+  <div class="footer"><span>THE BORING COMPANY × BULLENHAUS</span><span>Page 01</span></div>
+</section>
+
+<section class="page">
+  <div class="header">
+    <div class="brand">THE BORING COMPANY</div>
+    <div class="collab"><strong>× BULLENHAUS</strong>Premarket Collaboration Agreement</div>
+  </div>
+
+  <h2>GESETZLICHE REGELUNGEN</h2>
+  <p>
+    Dem Käufer ist bekannt, dass die angebotenen Wertpapiere nicht öffentlich registriert sein können und
+    dass Angebot und Verkauf nur im Rahmen der anwendbaren gesetzlichen Ausnahmen erfolgen dürfen.
+    Das Unternehmen darf sich auf die Richtigkeit und Vollständigkeit der vom Käufer gemachten Angaben verlassen.
+  </p>
+
+  <h2>ZUSATZVEREINBARUNG</h2>
+  <p>
+    Das Unternehmen behält sich vor, unter bestimmten Bedingungen zusätzliche Aktien auszugeben oder
+    Sonderregelungen hinsichtlich Haltefrist, Dividendenrechten oder sonstigen Rechten zu treffen, sofern
+    dies schriftlich bestätigt wurde.
+  </p>
+
+  <h2>ZAHLUNGS- UND ÜBERWEISUNGSSTELLE</h2>
+  <p>
+    Die Zahlungs- und Abwicklungsstelle ist ausschließlich für die technische Durchführung der Transaktion
+    verantwortlich. Sie ist nicht für die Emission, Verwaltung oder Bewertung der Aktien verantwortlich.
+  </p>
+
+  <h2>WIRTSCHAFTLICH BERECHTIGTER</h2>
+  <p>
+    Der Käufer ist wirtschaftlich Berechtigter oder Treuhänder des wirtschaftlich Berechtigten an den
+    erworbenen Wertpapieren. Bei natürlichen Personen kann eine Kopie eines gültigen Ausweisdokuments
+    verlangt werden.
+  </p>
+
+  <h2>BESTIMMTE VERPFLICHTUNGEN</h2>
+  <p>
+    Mit Unterzeichnung dieser Vereinbarung bestätigt der Käufer, dass er sich der rechtlichen und wirtschaftlichen
+    Tragweite bewusst ist und dass das Unternehmen sich auf die Richtigkeit und Vollständigkeit seiner Angaben stützen darf.
+  </p>
+
+  <h2>JURISTISCHE PERSON ALS INVESTOR</h2>
+  <p>Handelt es sich beim Käufer um eine juristische Person, bestätigt die zeichnungsberechtigte Person:</p>
+  <ul>
+    <li>dass die juristische Person rechtmäßig besteht,</li>
+    <li>dass sie zur Unterzeichnung dieser Vereinbarung befugt ist,</li>
+    <li>dass das Investment für die juristische Person zulässig ist,</li>
+    <li>dass alle unterzeichneten Dokumente verbindlich und rechtswirksam sind.</li>
+  </ul>
+
+  <h2>ANZUWENDENDES RECHT</h2>
+  <p>
+    Diese Vereinbarung unterliegt dem in den endgültigen Transaktionsunterlagen angegebenen Recht.
+    Gerichtsstand und Streitbeilegung richten sich nach den schriftlich vereinbarten Bedingungen.
+  </p>
+
+  <div class="signature-box">
+    <div>
+      <input class="field-input" data-bind="placeDate" style="width:100%;border:0;border-bottom:1px solid #333;padding:8px 4px;font-size:12px">
+      <div class="caption">Ort, Datum</div>
+    </div>
+    <div>
+      <div class="signature-line" data-bind="sellerSignature"></div>
+      <div class="caption">Unterschrift Verkäufer / Bevollmächtigter</div>
+    </div>
+  </div>
+
+  <div class="watermark">BULLENHAUS</div>
+  <div class="footer"><span>THE BORING COMPANY × BULLENHAUS</span><span>Page 02</span></div>
+</section>
+
+<section class="page">
+  <div class="header">
+    <div class="brand">KÄUFERINFORMATIONEN</div>
+    <div class="collab"><strong>THE BORING COMPANY</strong>× BULLENHAUS</div>
+  </div>
+
+  <div class="columns">
+    <div>
+      <h3>KÄUFER</h3>
+      <p>Das Unternehmen kann Aktienzeichnungen nur von Personen akzeptieren, die die erforderlichen Bedingungen erfüllen.</p>
+
+      <div class="field">
+        <label>Vollständiger Name in Druckbuchstaben</label>
+        <input data-bind="buyerName">
+      </div>
+      <div class="field">
+        <label>Geburtsdatum</label>
+        <input data-bind="birthDate">
+      </div>
+
+      <h3>HAUPTWOHNSITZ DES KÄUFERS</h3>
+      <div class="field">
+        <label>Straße Hausnummer</label>
+        <input data-bind="homeStreet">
+      </div>
+      <div class="grid2">
+        <div class="field"><label>PLZ Ort</label><input data-bind="homeCity"></div>
+        <div class="field"><label>Land</label><input data-bind="homeCountry"></div>
+      </div>
+      <div class="field"><label>Telefon</label><input data-bind="phone"></div>
+      <div class="field"><label>E-Mail</label><input data-bind="email"></div>
+    </div>
+
+    <div>
+      <h3>ADRESSE FÜR SCHRIFTVERKEHR</h3>
+      <div class="field">
+        <label>Straße Hausnummer</label>
+        <input data-bind="mailStreet">
+      </div>
+      <div class="grid2">
+        <div class="field"><label>PLZ Ort</label><input data-bind="mailCity"></div>
+        <div class="field"><label>Land</label><input data-bind="mailCountry"></div>
+      </div>
+
+      <h3>KÄUFERINFORMATIONEN</h3>
+      <p>
+        Der Käufer versichert, dass alle Angaben vollständig, aktuell und richtig sind und dass er das Unternehmen
+        schriftlich informiert, wenn sich vor Abschluss des Kaufs wesentliche Umstände ändern.
+      </p>
+      <p>
+        Der Käufer bestätigt, dass er diese Zeichnungsvereinbarung gelesen und verstanden hat und das Investment
+        aus freiem Willen tätigt.
+      </p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:28px">UNTERSCHRIFT UND BESTÄTIGUNG</h2>
+  <p>
+    Hiermit bestätige ich, dass ich den Inhalt dieses Vertrages gelesen und verstanden habe. Ich mache dieses
+    Investment aus freiem Willen und bin mir der mit dem Investment verbundenen Risiken bewusst.
+  </p>
+
+  <div class="signature-box">
+    <div>
+      <input data-bind="signatureDate" style="width:100%;border:1px solid #9ea7b3;padding:10px">
+      <div class="caption">Datum</div>
+    </div>
+    <div>
+      <div class="signature-line" data-bind="buyerSignature"></div>
+      <div class="caption">Unterschrift Käufer</div>
+    </div>
+  </div>
+
+  <div class="footer"><span>THE BORING COMPANY × BULLENHAUS</span><span>Page 03</span></div>
+</section>
+
+<section class="page">
+  <div class="header">
+    <div class="brand">CONFIDENTIAL PRIVATE PLACEMENT MEMORANDUM</div>
+    <div class="collab"><strong>THE BORING COMPANY</strong>× BULLENHAUS</div>
+  </div>
+
+  <h1>PRIVATE PLACEMENT OF COMMON OR PREFERRED STOCK</h1>
+  <p>
+    This Memorandum is provided solely for the purpose of evaluating a potential private investment in
+    securities of The Boring Company. The securities described herein may be subject to transfer restrictions
+    and may not be publicly tradable.
+  </p>
+
+  <h2>I. COMPANY OVERVIEW</h2>
+  <p>
+    The Boring Company is a privately held infrastructure and technology company focused on tunnel construction,
+    underground transportation systems, and related engineering solutions.
+  </p>
+
+  <h2>II. OFFERING TERMS</h2>
+  <ul>
+    <li>Issuer: The Boring Company</li>
+    <li>Securities Offered: Common or Preferred Stock, subject to final allocation documents</li>
+    <li>Number of Shares: As specified in the executed subscription agreement</li>
+    <li>Price per Share: As specified at the time of purchase</li>
+    <li>Minimum Investment: Subject to company or placement-agent discretion</li>
+    <li>Offering Type: Private placement</li>
+    <li>Eligibility: Subject to applicable investor qualification requirements</li>
+  </ul>
+
+  <h2>III. USE OF PROCEEDS</h2>
+  <p>Proceeds may be used for corporate purposes including:</p>
+  <ul>
+    <li>Expansion of tunnel and transportation infrastructure</li>
+    <li>Engineering, research and development</li>
+    <li>Equipment, construction and operational scaling</li>
+    <li>Regulatory, licensing and compliance activities</li>
+    <li>General corporate purposes and working capital</li>
+  </ul>
+
+  <div class="notice">
+    <strong>Important:</strong>
+    This document is a configurable contract template. Final legal terms must match the issuer’s authorized
+    offering documents and applicable law.
+  </div>
+
+  <div class="watermark">THE BORING COMPANY</div>
+  <div class="footer"><span>Confidential Private Placement Memorandum</span><span>Page 04</span></div>
+</section>
+
+<section class="page">
+  <div class="header">
+    <div class="brand">RISK FACTORS & LEGAL STATUS</div>
+    <div class="collab"><strong>THE BORING COMPANY</strong>× BULLENHAUS</div>
+  </div>
+
+  <h2>IV. RISK FACTORS</h2>
+  <p>An investment in private securities involves significant risks, including but not limited to:</p>
+  <ul>
+    <li>Illiquidity and absence of a public trading market</li>
+    <li>Uncertainty regarding future financing, listing or liquidity events</li>
+    <li>Operational, engineering and construction risks</li>
+    <li>Regulatory, licensing and permitting risks</li>
+    <li>Market, execution and valuation risk</li>
+    <li>Potential loss of the entire invested amount</li>
+  </ul>
+
+  <h2>V. LEGAL STATUS & GOVERNING LAW</h2>
+  <p>
+    The securities described herein may not have been registered under applicable securities laws.
+    This Memorandum does not constitute an offer or solicitation in any jurisdiction where such offer
+    or solicitation would be unlawful.
+  </p>
+
+  <h2>IMPORTANT NOTICE TO INVESTORS</h2>
+  <p>
+    This Memorandum is strictly confidential and is furnished solely to selected prospective investors
+    for the purpose of evaluating a potential investment.
+  </p>
+  <p>
+    Any distribution, reproduction or disclosure of this document, in whole or in part, is prohibited
+    without prior written consent from the authorized parties.
+  </p>
+
+  <div style="margin-top:42px">
+    <div class="field">
+      <label>Document date</label>
+      <input data-bind="documentDate">
+    </div>
+    <div class="field">
+      <label>Authorized representative</label>
+      <input data-bind="authorizedRepresentative">
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input data-bind="representativeTitle">
+    </div>
+    <div class="signature-box">
+      <div>
+        <div class="signature-line" data-bind="companySignature"></div>
+        <div class="caption">Authorized Company Signature</div>
+      </div>
+      <div>
+        <div class="signature-line">BULLENHAUS</div>
+        <div class="caption">Collaboration / Placement Partner</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">BULLENHAUS</div>
+  <div class="footer"><span>THE BORING COMPANY × BULLENHAUS</span><span>Page 05</span></div>
+</section>
+
+</main>
+
+<script>
+const state={
+  quantity:null,
+  price:null,
+  currency:"EUR",
+  purchaseDate:null,
+  place:""
+};
+
+function setAll(name,value){
+  document.querySelectorAll('[data-bind="'+name+'"]').forEach(el=>{
+    if(el.tagName==="INPUT") el.value=value??"";
+    else el.textContent=value??"";
+  });
+}
+function fmtQty(v){
+  if(v===null||v===undefined||v===""||Number.isNaN(Number(v))) return "";
+  return new Intl.NumberFormat("de-DE",{maximumFractionDigits:6}).format(Number(v));
+}
+function fmtMoney(v,c){
+  if(v===null||v===undefined||v===""||Number.isNaN(Number(v))) return "";
+  return new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v))+" "+(c||"EUR");
+}
+function fmtDate(v){
+  if(!v) return "";
+  const d=new Date(v);
+  if(Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}).format(d);
+}
+function render(){
+  setAll("quantity",fmtQty(state.quantity));
+  setAll("price",fmtMoney(state.price,state.currency));
+  const total=(state.quantity!==null&&state.price!==null)
+    ? Number(state.quantity)*Number(state.price):null;
+  setAll("amount",fmtMoney(total,state.currency));
+  const date=fmtDate(state.purchaseDate);
+  setAll("placeDate",[state.place,date].filter(Boolean).join(", "));
+  setAll("signatureDate",date);
+  setAll("documentDate",date);
+}
+
+window.setContractPurchaseData=function(data={}){
+  if("quantity" in data) state.quantity=data.quantity===""?null:Number(data.quantity);
+  if("price" in data) state.price=data.price===""?null:Number(data.price);
+  if(data.currency) state.currency=String(data.currency).toUpperCase();
+  if("purchaseDate" in data) state.purchaseDate=data.purchaseDate||null;
+  if("place" in data) state.place=data.place||"";
+
+  const b=data.buyer||{};
+  setAll("buyerName",b.fullName||"");
+  setAll("birthDate",b.birthDate||"");
+  setAll("homeStreet",b.homeStreet||b.address||"");
+  setAll("homeCity",b.homeCity||b.city||"");
+  setAll("homeCountry",b.homeCountry||b.country||"");
+  setAll("phone",b.phone||"");
+  setAll("email",b.email||"");
+  setAll("mailStreet",b.mailStreet||"");
+  setAll("mailCity",b.mailCity||"");
+  setAll("mailCountry",b.mailCountry||"");
+  setAll("buyerSignature",b.signature||b.fullName||"");
+
+  setAll("sellerSignature",data.sellerSignature||"");
+  setAll("authorizedRepresentative",data.authorizedRepresentative||"");
+  setAll("representativeTitle",data.representativeTitle||"");
+  setAll("companySignature",data.companySignature||"");
+
+  render();
+};
+
+(function(){
+  const p=new URLSearchParams(location.search);
+  if(![...p.keys()].length){ render(); return; }
+
+  window.setContractPurchaseData({
+    quantity:p.get("quantity")??p.get("shares")??"",
+    price:p.get("price")??"",
+    currency:p.get("currency")??"EUR",
+    purchaseDate:p.get("purchaseDate")??p.get("date")??"",
+    place:p.get("place")??p.get("city")??"",
+    sellerSignature:p.get("sellerSignature")??"",
+    authorizedRepresentative:p.get("authorizedRepresentative")??"",
+    representativeTitle:p.get("representativeTitle")??"",
+    companySignature:p.get("companySignature")??"",
+    buyer:{
+      fullName:p.get("name")??"",
+      birthDate:p.get("birthDate")??"",
+      homeStreet:p.get("street")??"",
+      homeCity:p.get("homeCity")??"",
+      homeCountry:p.get("country")??"",
+      phone:p.get("phone")??"",
+      email:p.get("email")??"",
+      mailStreet:p.get("mailStreet")??"",
+      mailCity:p.get("mailCity")??"",
+      mailCountry:p.get("mailCountry")??"",
+      signature:p.get("signature")??""
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,413 @@
+- generic [ref=f3e2]:
+  - generic [ref=f3e3]:
+    - banner [ref=f3e4]:
+      - generic [ref=f3e5]:
+        - link "Bullenhaus home" [ref=f3e6] [cursor=pointer]:
+          - /url: /login
+          - img "Bullenhaus" [ref=f3e7]
+          - generic [ref=f3e8]: BULLENHAUS
+        - navigation "Primary" [ref=f3e9]:
+          - link "Markets" [ref=f3e10] [cursor=pointer]:
+            - /url: "#markets"
+          - link "Premarket" [ref=f3e11] [cursor=pointer]:
+            - /url: "#premarket"
+          - link "iTools" [ref=f3e12] [cursor=pointer]:
+            - /url: "#itools"
+          - link "Platform" [ref=f3e13] [cursor=pointer]:
+            - /url: "#features"
+        - button "Log In" [ref=f3e14]
+    - main [ref=f3e18]:
+      - generic [ref=f3e20]:
+        - paragraph [ref=f3e21]: Private multi-asset trading terminal
+        - heading "Trade crypto, Forex & metals with a premium edge" [level=1] [ref=f3e22]: Trade crypto, Forex & metalswith a premium edge
+        - paragraph [ref=f3e23]: Fast execution, premarket access and the iTools analytics suite — one elegant terminal on desktop and mobile.
+        - generic [ref=f3e24]:
+          - button "Log in to your account" [ref=f3e25]
+          - link "Open an account" [ref=f3e29] [cursor=pointer]:
+            - /url: /register
+        - generic [ref=f3e30]:
+          - generic [ref=f3e31]: Crypto
+          - generic [ref=f3e37]: Forex
+          - generic [ref=f3e40]: Metals
+          - generic [ref=f3e44]: Risk controls
+      - marquee "Live cryptocurrency prices" [ref=f3e49]:
+        - generic [ref=f3e50]: Demo
+        - generic [ref=f3e53]:
+          - generic [aria-hidden] [ref=f3e54]:
+            - generic [ref=f3e55]: BTC
+            - generic [ref=f3e56]: $68,000
+            - generic [ref=f3e57]: +1.90%
+          - generic [aria-hidden] [ref=f3e62]:
+            - generic [ref=f3e63]: ETH
+            - generic [ref=f3e64]: $3,550
+            - generic [ref=f3e65]: +1.20%
+          - generic [aria-hidden] [ref=f3e70]:
+            - generic [ref=f3e71]: SOL
+            - generic [ref=f3e72]: $172.00
+            - generic [ref=f3e73]: +3.40%
+          - generic [aria-hidden] [ref=f3e78]:
+            - generic [ref=f3e79]: BNB
+            - generic [ref=f3e80]: $610.00
+            - generic [ref=f3e81]: +0.80%
+          - generic [aria-hidden] [ref=f3e86]:
+            - generic [ref=f3e87]: XRP
+            - generic [ref=f3e88]: $0.6200
+            - generic [ref=f3e89]: "-1.10%"
+          - generic [aria-hidden] [ref=f3e94]:
+            - generic [ref=f3e95]: ADA
+            - generic [ref=f3e96]: $0.4600
+            - generic [ref=f3e97]: "-0.70%"
+          - generic [aria-hidden] [ref=f3e102]:
+            - generic [ref=f3e103]: DOGE
+            - generic [ref=f3e104]: $0.1500
+            - generic [ref=f3e105]: +2.60%
+          - generic [aria-hidden] [ref=f3e110]:
+            - generic [ref=f3e111]: AVAX
+            - generic [ref=f3e112]: $36.00
+            - generic [ref=f3e113]: +1.50%
+          - generic [aria-hidden] [ref=f3e118]:
+            - generic [ref=f3e119]: LINK
+            - generic [ref=f3e120]: $17.50
+            - generic [ref=f3e121]: +0.90%
+          - generic [aria-hidden] [ref=f3e126]:
+            - generic [ref=f3e127]: DOT
+            - generic [ref=f3e128]: $7.20
+            - generic [ref=f3e129]: "-0.40%"
+          - generic [aria-hidden] [ref=f3e134]:
+            - generic [ref=f3e135]: TON
+            - generic [ref=f3e136]: $7.60
+            - generic [ref=f3e137]: +1.10%
+          - generic [aria-hidden] [ref=f3e142]:
+            - generic [ref=f3e143]: LTC
+            - generic [ref=f3e144]: $84.00
+            - generic [ref=f3e145]: +0.50%
+          - generic [aria-hidden] [ref=f3e150]:
+            - generic [ref=f3e151]: BTC
+            - generic [ref=f3e152]: $68,000
+            - generic [ref=f3e153]: +1.90%
+          - generic [aria-hidden] [ref=f3e158]:
+            - generic [ref=f3e159]: ETH
+            - generic [ref=f3e160]: $3,550
+            - generic [ref=f3e161]: +1.20%
+          - generic [aria-hidden] [ref=f3e166]:
+            - generic [ref=f3e167]: SOL
+            - generic [ref=f3e168]: $172.00
+            - generic [ref=f3e169]: +3.40%
+          - generic [aria-hidden] [ref=f3e174]:
+            - generic [ref=f3e175]: BNB
+            - generic [ref=f3e176]: $610.00
+            - generic [ref=f3e177]: +0.80%
+          - generic [aria-hidden] [ref=f3e182]:
+            - generic [ref=f3e183]: XRP
+            - generic [ref=f3e184]: $0.6200
+            - generic [ref=f3e185]: "-1.10%"
+          - generic [aria-hidden] [ref=f3e190]:
+            - generic [ref=f3e191]: ADA
+            - generic [ref=f3e192]: $0.4600
+            - generic [ref=f3e193]: "-0.70%"
+          - generic [aria-hidden] [ref=f3e198]:
+            - generic [ref=f3e199]: DOGE
+            - generic [ref=f3e200]: $0.1500
+            - generic [ref=f3e201]: +2.60%
+          - generic [aria-hidden] [ref=f3e206]:
+            - generic [ref=f3e207]: AVAX
+            - generic [ref=f3e208]: $36.00
+            - generic [ref=f3e209]: +1.50%
+          - generic [aria-hidden] [ref=f3e214]:
+            - generic [ref=f3e215]: LINK
+            - generic [ref=f3e216]: $17.50
+            - generic [ref=f3e217]: +0.90%
+          - generic [aria-hidden] [ref=f3e222]:
+            - generic [ref=f3e223]: DOT
+            - generic [ref=f3e224]: $7.20
+            - generic [ref=f3e225]: "-0.40%"
+          - generic [aria-hidden] [ref=f3e230]:
+            - generic [ref=f3e231]: TON
+            - generic [ref=f3e232]: $7.60
+            - generic [ref=f3e233]: +1.10%
+          - generic [aria-hidden] [ref=f3e238]:
+            - generic [ref=f3e239]: LTC
+            - generic [ref=f3e240]: $84.00
+            - generic [ref=f3e241]: +0.50%
+      - region [ref=f3e246]:
+        - generic [ref=f3e247]:
+          - paragraph [ref=f3e248]: Live market overview
+          - heading "Crypto, Forex & Metals at a glance" [level=2] [ref=f3e249]
+          - paragraph [ref=f3e250]: A snapshot of the markets you can trade. Crypto is live from a public exchange feed; metals are demo until a feed is connected.
+        - generic [ref=f3e251]:
+          - generic [ref=f3e252]:
+            - generic [ref=f3e253]:
+              - heading "Cryptocurrencies" [level=3] [ref=f3e258]
+              - generic [ref=f3e259]: Demo
+            - list [ref=f3e261]:
+              - listitem [ref=f3e262]:
+                - generic [ref=f3e263]: BTC/USDT
+                - generic [ref=f3e265]:
+                  - generic [ref=f3e266]: $68,000
+                  - generic [ref=f3e267]: +1.90%
+              - listitem [ref=f3e271]:
+                - generic [ref=f3e272]: ETH/USDT
+                - generic [ref=f3e274]:
+                  - generic [ref=f3e275]: $3,550
+                  - generic [ref=f3e276]: +1.20%
+              - listitem [ref=f3e280]:
+                - generic [ref=f3e281]: SOL/USDT
+                - generic [ref=f3e283]:
+                  - generic [ref=f3e284]: $172.00
+                  - generic [ref=f3e285]: +3.40%
+              - listitem [ref=f3e289]:
+                - generic [ref=f3e290]: BNB/USDT
+                - generic [ref=f3e292]:
+                  - generic [ref=f3e293]: $610.00
+                  - generic [ref=f3e294]: +0.80%
+              - listitem [ref=f3e298]:
+                - generic [ref=f3e299]: XRP/USDT
+                - generic [ref=f3e301]:
+                  - generic [ref=f3e302]: $0.6200
+                  - generic [ref=f3e303]: "-1.10%"
+              - listitem [ref=f3e307]:
+                - generic [ref=f3e308]: ADA/USDT
+                - generic [ref=f3e310]:
+                  - generic [ref=f3e311]: $0.4600
+                  - generic [ref=f3e312]: "-0.70%"
+              - listitem [ref=f3e316]:
+                - generic [ref=f3e317]: DOGE/USDT
+                - generic [ref=f3e319]:
+                  - generic [ref=f3e320]: $0.1500
+                  - generic [ref=f3e321]: +2.60%
+              - listitem [ref=f3e325]:
+                - generic [ref=f3e326]: AVAX/USDT
+                - generic [ref=f3e328]:
+                  - generic [ref=f3e329]: $36.00
+                  - generic [ref=f3e330]: +1.50%
+              - listitem [ref=f3e334]:
+                - generic [ref=f3e335]: LINK/USDT
+                - generic [ref=f3e337]:
+                  - generic [ref=f3e338]: $17.50
+                  - generic [ref=f3e339]: +0.90%
+              - listitem [ref=f3e343]:
+                - generic [ref=f3e344]: DOT/USDT
+                - generic [ref=f3e346]:
+                  - generic [ref=f3e347]: $7.20
+                  - generic [ref=f3e348]: "-0.40%"
+              - listitem [ref=f3e352]:
+                - generic [ref=f3e353]: TON/USDT
+                - generic [ref=f3e355]:
+                  - generic [ref=f3e356]: $7.60
+                  - generic [ref=f3e357]: +1.10%
+              - listitem [ref=f3e361]:
+                - generic [ref=f3e362]: LTC/USDT
+                - generic [ref=f3e364]:
+                  - generic [ref=f3e365]: $84.00
+                  - generic [ref=f3e366]: +0.50%
+          - generic [ref=f3e370]:
+            - generic [ref=f3e371]:
+              - heading "Forex" [level=3] [ref=f3e376]
+              - generic [ref=f3e377]: Demo
+            - list [ref=f3e379]:
+              - listitem [ref=f3e380]:
+                - generic [ref=f3e381]:
+                  - generic [ref=f3e382]: EUR
+                  - generic [ref=f3e383]: EUR/USD
+                - generic [ref=f3e384]:
+                  - generic [ref=f3e385]: "1.08"
+                  - generic [ref=f3e386]: +0.65%
+              - listitem [ref=f3e390]:
+                - generic [ref=f3e391]:
+                  - generic [ref=f3e392]: GBP
+                  - generic [ref=f3e393]: GBP/USD
+                - generic [ref=f3e394]:
+                  - generic [ref=f3e395]: "1.26"
+                  - generic [ref=f3e396]: "-1.13%"
+              - listitem [ref=f3e400]:
+                - generic [ref=f3e401]:
+                  - generic [ref=f3e402]: USD
+                  - generic [ref=f3e403]: USD/JPY
+                - generic [ref=f3e404]:
+                  - generic [ref=f3e405]: "149.50"
+                  - generic [ref=f3e406]: +0.26%
+              - listitem [ref=f3e410]:
+                - generic [ref=f3e411]:
+                  - generic [ref=f3e412]: USD
+                  - generic [ref=f3e413]: USD/CHF
+                - generic [ref=f3e414]:
+                  - generic [ref=f3e415]: "0.9050"
+                  - generic [ref=f3e416]: "-1.84%"
+              - listitem [ref=f3e420]:
+                - generic [ref=f3e421]:
+                  - generic [ref=f3e422]: AUD
+                  - generic [ref=f3e423]: AUD/USD
+                - generic [ref=f3e424]:
+                  - generic [ref=f3e425]: "0.6530"
+                  - generic [ref=f3e426]: +0.24%
+              - listitem [ref=f3e430]:
+                - generic [ref=f3e431]:
+                  - generic [ref=f3e432]: USD
+                  - generic [ref=f3e433]: USD/CAD
+                - generic [ref=f3e434]:
+                  - generic [ref=f3e435]: "1.37"
+                  - generic [ref=f3e436]: "-1.94%"
+            - paragraph [ref=f3e440]: Reference rates are live; intraday change % is indicative (simulated).
+          - generic [ref=f3e441]:
+            - generic [ref=f3e442]:
+              - heading "Metals" [level=3] [ref=f3e448]
+              - generic [ref=f3e449]: Demo
+            - list [ref=f3e451]:
+              - listitem [ref=f3e452]:
+                - generic [ref=f3e453]:
+                  - generic [ref=f3e454]: XAU
+                  - generic [ref=f3e455]: Gold
+                - generic [ref=f3e456]:
+                  - generic [ref=f3e457]: $2,340
+                  - generic [ref=f3e458]: "-1.50%"
+              - listitem [ref=f3e462]:
+                - generic [ref=f3e463]:
+                  - generic [ref=f3e464]: XAG
+                  - generic [ref=f3e465]: Silver
+                - generic [ref=f3e466]:
+                  - generic [ref=f3e467]: $27.80
+                  - generic [ref=f3e468]: +0.35%
+              - listitem [ref=f3e472]:
+                - generic [ref=f3e473]:
+                  - generic [ref=f3e474]: XPT
+                  - generic [ref=f3e475]: Platinum
+                - generic [ref=f3e476]:
+                  - generic [ref=f3e477]: $960.00
+                  - generic [ref=f3e478]: "-0.89%"
+              - listitem [ref=f3e482]:
+                - generic [ref=f3e483]:
+                  - generic [ref=f3e484]: XPD
+                  - generic [ref=f3e485]: Palladium
+                - generic [ref=f3e486]:
+                  - generic [ref=f3e487]: $1,020
+                  - generic [ref=f3e488]: "-0.80%"
+            - paragraph [ref=f3e492]: Demo prices — a metals feed is not yet connected.
+      - region "Platform advantages" [ref=f3e493]:
+        - generic [ref=f3e494]:
+          - paragraph [ref=f3e495]: Why Bullenhaus
+          - heading "Everything a modern trader needs" [level=2] [ref=f3e496]
+          - paragraph [ref=f3e497]: A premium multi-asset terminal built for speed, clarity and control.
+        - generic [ref=f3e499]:
+          - generic [ref=f3e500]:
+            - heading "Multi-asset access" [level=3] [ref=f3e507]
+            - paragraph [ref=f3e508]: Trade crypto, Forex and precious metals from one unified account.
+          - generic [ref=f3e509]:
+            - heading "Fast execution" [level=3] [ref=f3e513]
+            - paragraph [ref=f3e514]: Low-latency order routing so your fills track the price you see.
+          - generic [ref=f3e515]:
+            - heading "Risk management" [level=3] [ref=f3e520]
+            - paragraph [ref=f3e521]: Stop-loss, take-profit and margin controls built into every ticket.
+          - generic [ref=f3e522]:
+            - heading "Smart alerts" [level=3] [ref=f3e527]
+            - paragraph [ref=f3e528]: Price and volatility alerts that reach you on desktop and mobile.
+          - generic [ref=f3e529]:
+            - heading "Market overview" [level=3] [ref=f3e533]
+            - paragraph [ref=f3e534]: Clean, responsive charts with the depth serious traders expect.
+          - generic [ref=f3e535]:
+            - heading "Desktop & mobile" [level=3] [ref=f3e539]
+            - paragraph [ref=f3e540]: A consistent premium terminal on every screen size.
+      - region [ref=f3e542]:
+        - generic [ref=f3e544]:
+          - generic [ref=f3e545]:
+            - generic [ref=f3e546]: Premarket
+            - heading "Get in before the crowd" [level=2] [ref=f3e553]
+            - paragraph [ref=f3e554]: Access premarket opportunities and pre-IPO style allocations the moment they open. Position early on emerging assets with transparent terms and a fixed price at signing.
+            - list [ref=f3e555]:
+              - listitem [ref=f3e556]:
+                - generic [ref=f3e557]: ✓
+                - text: Early access to pre-market assets
+              - listitem [ref=f3e558]:
+                - generic [ref=f3e559]: ✓
+                - text: Fixed price locked at signing
+              - listitem [ref=f3e560]:
+                - generic [ref=f3e561]: ✓
+                - text: Transparent, contract-backed allocations
+            - button "Explore premarket" [ref=f3e562]
+          - generic [ref=f3e565]:
+            - generic [ref=f3e566]:
+              - paragraph [ref=f3e572]: Early entry
+              - paragraph [ref=f3e573]: Pre-launch
+            - generic [ref=f3e574]:
+              - paragraph [ref=f3e578]: Upside potential
+              - paragraph [ref=f3e579]: High
+            - generic [ref=f3e580]:
+              - paragraph [ref=f3e584]: Terms
+              - paragraph [ref=f3e585]: Contract-backed
+            - generic [ref=f3e586]:
+              - paragraph [ref=f3e590]: Price
+              - paragraph [ref=f3e591]: Fixed at signing
+      - region [ref=f3e593]:
+        - generic [ref=f3e594]:
+          - generic [ref=f3e595]:
+            - generic [ref=f3e596]:
+              - paragraph [ref=f3e609]: AI insights
+              - paragraph [ref=f3e610]: Signal scoring
+            - generic [ref=f3e611]:
+              - paragraph [ref=f3e614]: Analytics
+              - paragraph [ref=f3e615]: Market depth
+            - generic [ref=f3e616]:
+              - paragraph [ref=f3e620]: Alerts
+              - paragraph [ref=f3e621]: Real-time
+            - generic [ref=f3e622]:
+              - paragraph [ref=f3e626]: Risk radar
+              - paragraph [ref=f3e627]: Exposure view
+          - generic [ref=f3e628]:
+            - generic [ref=f3e629]: iTools
+            - heading "Analytics that work while you trade" [level=2] [ref=f3e643]
+            - paragraph [ref=f3e644]: "iTools is the platform's analytical module: market scanning, signal scoring, risk exposure and volatility alerts in one place — so you spend less time hunting and more time deciding."
+            - list [ref=f3e645]:
+              - listitem [ref=f3e646]:
+                - generic [ref=f3e647]: ✓
+                - text: Cross-asset market scanner
+              - listitem [ref=f3e648]:
+                - generic [ref=f3e649]: ✓
+                - text: Volatility & momentum signals
+              - listitem [ref=f3e650]:
+                - generic [ref=f3e651]: ✓
+                - text: Portfolio risk & exposure radar
+      - region "Strong platform features" [ref=f3e653]:
+        - generic [ref=f3e654]:
+          - paragraph [ref=f3e655]: Platform strength
+          - heading "Built for serious execution" [level=2] [ref=f3e656]
+        - generic [ref=f3e658]:
+          - generic [ref=f3e659]:
+            - heading "Multi-asset trading" [level=3] [ref=f3e666]
+            - paragraph [ref=f3e667]: Crypto, Forex majors, and metals side by side — diversify without switching platforms.
+          - generic [ref=f3e668]:
+            - heading "Fast, precise fills" [level=3] [ref=f3e674]
+            - paragraph [ref=f3e675]: A responsive engine and live pricing keep execution tight during fast markets.
+          - generic [ref=f3e676]:
+            - heading "Global markets" [level=3] [ref=f3e682]
+            - paragraph [ref=f3e683]: Follow currencies and commodities around the clock with a live market overview.
+      - region [ref=f3e684]:
+        - generic [ref=f3e686]:
+          - paragraph [ref=f3e687]: Limited offer
+          - heading "Start trading with a premium edge" [level=2] [ref=f3e688]
+          - paragraph [ref=f3e689]: Open an account today and unlock multi-asset trading, premarket access and the full iTools analytics suite. Fast onboarding, transparent terms, and support on desktop and mobile.
+          - generic [ref=f3e690]:
+            - generic [ref=f3e691]:
+              - paragraph [ref=f3e692]: Welcome package
+              - paragraph [ref=f3e693]: Priority onboarding
+            - generic [ref=f3e694]:
+              - paragraph [ref=f3e695]: iTools included
+              - paragraph [ref=f3e696]: Full analytics suite
+            - generic [ref=f3e697]:
+              - paragraph [ref=f3e698]: Premarket access
+              - paragraph [ref=f3e699]: Early allocations
+          - generic [ref=f3e700]:
+            - button "Log in to continue" [ref=f3e701]
+            - link "Create an account" [ref=f3e704] [cursor=pointer]:
+              - /url: /register
+          - paragraph [ref=f3e705]: Trading involves risk. Promotional content describes platform features only.
+      - generic [ref=f3e707]:
+        - paragraph [ref=f3e708]: © 2026 Bullenhaus. Trading involves risk.
+        - navigation "Legal" [ref=f3e709]:
+          - link "Terms" [ref=f3e710] [cursor=pointer]:
+            - /url: /legal/terms
+          - link "Privacy" [ref=f3e711] [cursor=pointer]:
+            - /url: /legal/privacy
+          - link "AML" [ref=f3e712] [cursor=pointer]:
+            - /url: /legal/aml
+          - link "Contact" [ref=f3e713] [cursor=pointer]:
+            - /url: /legal/contact
+  - region "Notifications alt+T"

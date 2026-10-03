@@ -1,0 +1,13 @@
+- generic [ref=e2]:
+  - main [ref=e3]:
+    - navigation "Choose a Bullenhaus platform" [ref=e4]:
+      - button "Bullenhaus Recovery — not connected yet" [disabled] [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Bullenhaus
+          - generic [ref=e9]: Recovery
+      - link "Open Bullenhaus Trade" [ref=e10] [cursor=pointer]:
+        - /url: /trade
+        - generic [ref=e12]:
+          - generic [ref=e13]: Bullenhaus
+          - generic [ref=e14]: Trade
+  - region "Notifications alt+T"
