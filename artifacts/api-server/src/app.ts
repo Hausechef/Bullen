@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -26,9 +26,17 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Webhooks need the raw stream. All other /api routes use JSON body parsing.
+app.use("/api/webhooks", express.raw({ type: "*/*", limit: "1mb" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);
+
+// Catch-all for truly unknown /api paths (returns JSON, not SPA HTML).
+app.use("/api", (_req: Request, res: Response, _next: NextFunction) => {
+  res.status(404).json({ error: "Not found" });
+});
 
 export default app;

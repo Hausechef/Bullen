@@ -165,9 +165,15 @@ const AppContent = () => {
           {/* Public Auth Routes */}
           <Route path="/" element={<PortalLanding />} />
           <Route path="/recovery" element={<RecoveryLanding />} />
-          {/* Путь /recovery/* на общем домене проксируется на Recovery-проект,
-              поэтому внутренний портал переезжает на отдельный путь. */}
-          <Route path="/recovery-portal" element={<RecoveryClientPortal />} />
+          {/* Единый BullenHaus: Recovery-портал — нативный маршрут /recovery/portal
+              (Supabase Auth + RLS). Прежний deep link /recovery-portal сохранён
+              как редирект, чтобы не ломать существующие ссылки. */}
+          <Route path="/recovery-portal" element={<Navigate to="/recovery/portal" replace />} />
+          <Route element={<AuthGuard />}>
+            <Route element={<RoleGuard allowedRoles={['client']} />}>
+              <Route path="/recovery/portal" element={<RecoveryClientPortal />} />
+            </Route>
+          </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AuthLayout />}>
             <Route path="/register" element={<Register />} />

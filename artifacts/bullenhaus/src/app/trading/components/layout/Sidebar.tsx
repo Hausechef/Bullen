@@ -24,7 +24,8 @@ import {
   Terminal,
   X,
   ChevronRight,
-  Rocket
+  Rocket,
+  HeartHandshake
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -40,10 +41,12 @@ interface SidebarItemProps {
   active?: boolean;
   alert?: number;
   to?: string;
+  /** External URL — rendered as a plain <a> instead of a router Link. */
+  href?: string;
   onClick?: () => void;
 }
 
-const SidebarItem = ({ icon: Icon, iconSrc, label, active, alert, to, onClick }: SidebarItemProps) => {
+const SidebarItem = ({ icon: Icon, iconSrc, label, active, alert, to, href, onClick }: SidebarItemProps) => {
   const content = (
     <motion.div
       whileHover={{ 
@@ -109,6 +112,9 @@ const SidebarItem = ({ icon: Icon, iconSrc, label, active, alert, to, onClick }:
     </motion.div>
   );
 
+  if (href) {
+    return <a href={href} className="block" onClick={onClick}>{content}</a>;
+  }
   return to ? <Link to={to} className="block" onClick={onClick}>{content}</Link> : content;
 };
 
@@ -177,6 +183,16 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <div className="pt-4 pb-2 px-4 label-eyebrow">{t('account', { defaultValue: 'Account' })}</div>
         <SidebarItem icon={ShieldCheck} iconSrc="/assets/icons/shield.png" label={t('kyc')} to="/trade/kyc" active={currentPath === '/trade/kyc'} onClick={onClose} />
+        {role === 'client' && (
+          <SidebarItem
+            icon={HeartHandshake}
+            iconSrc="/assets/icons/chatbot.png"
+            label={t('recovery', { defaultValue: 'Recovery' })}
+            href={((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim() || 'http://localhost:3001/'}
+            active={currentPath.startsWith('/recovery')}
+            onClick={onClose}
+          />
+        )}
         <SidebarItem icon={Settings} iconSrc="/assets/icons/settings.png" label={t('settings')} to="/trade/settings" active={currentPath === '/trade/settings'} onClick={onClose} />
         <SidebarItem icon={LifeBuoy} iconSrc="/assets/icons/chatbot.png" label={t('help')} to="/trade/support" active={currentPath === '/trade/support'} onClick={onClose} />
 

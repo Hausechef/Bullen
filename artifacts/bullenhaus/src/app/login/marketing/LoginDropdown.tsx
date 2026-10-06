@@ -67,11 +67,18 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
 
       let role: UnifiedRole = 'client';
       const userId = data.user?.id;
+      let recoveryClient = false;
       if (userId) {
-        const { data: profile } = await supabase.from('users').select('role').eq('id', userId).single();
+        const { data: profile } = await supabase.from('users').select('role, attribution').eq('id', userId).single();
         // public.users is the only client-visible role source. user_metadata is
         // intentionally excluded because account holders may edit it themselves.
         role = (profile?.role || 'client') as UnifiedRole;
+        // Recovery-клиенты (attribution.source = 'recovery') попадают в Recovery-портал,
+        // а не в торговый терминал. Торг authored их аккаунтами не запрещён (§27: один
+        // аккаунт может иметь несколько продуктовых разрешений).
+        recoveryClient =
+          role === 'client' &&
+          (profile?.attribution as { source?: string } | null)?.source === 'recovery';
       }
 
       let dashboard = '/trade/dashboard';
@@ -79,6 +86,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
       else if (role === 'director' || role === 'crm_admin') dashboard = '/crm/dashboard';
       else if (role === 'manager') dashboard = '/crm/manager';
       else if (role === 'agent') dashboard = '/crm/workspace';
+      else if (recoveryClient) dashboard = '/recovery/portal';
 
       // next учитываем только когда роль допущена в запрошенный раздел;
       // CRM-сотрудников после входа всегда ведём в их корневой раздел —

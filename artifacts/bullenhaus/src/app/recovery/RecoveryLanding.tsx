@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './RecoveryLanding.css';
 
 export function RecoveryLanding() {
+  // Recovery — отдельное приложение (dev: localhost:3001, деплой: VITE_RECOVERY_URL).
   const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
   const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
 
@@ -38,6 +39,8 @@ export function RecoveryLanding() {
           <p className="recovery-landing__description">
             A private case workspace for protecting your claim, submitting evidence, and following every recovery milestone.
           </p>
+          {/* Внешнее Recovery-приложение (решение владельца); внутренний
+              /recovery/portal остаётся резервным входом с общей сессией. */}
           <a className="recovery-landing__cta" href={recoveryProjectUrl}>
             Enter secure workspace
             <ArrowRight size={18} aria-hidden="true" />

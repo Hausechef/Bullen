@@ -34,6 +34,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useI18n } from "../lib/i18n";
 import { TeamChat } from "./TeamChat";
 
+const TEAMCHAT_ENABLED = import.meta.env.VITE_TEAMCHAT_ENABLED === "true";
+
 const iconMap: Record<string, string> = {
   'navDirectorDashboard': '/assets/icons/dashboard.png',
   'navManagerDashboard': '/assets/icons/dashboard.png',
@@ -386,7 +388,7 @@ export function Layout({ children, role, onLogout }: { children: ReactNode, role
       </div>
 
       {/* Floating Team Chat widget — available to everyone with CRM access */}
-      <TeamChat />
+      {TEAMCHAT_ENABLED && <TeamChat />}
     </div>
   );
 }

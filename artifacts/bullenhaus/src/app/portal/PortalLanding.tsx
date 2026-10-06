@@ -81,6 +81,9 @@ function PortalLink({ children, href, to, variant }: PortalLinkProps) {
 }
 
 export default function PortalLanding() {
+  // Recovery — отдельное приложение (dev: localhost:3001, деплой: VITE_RECOVERY_URL).
+  // По решению владельца кнопка ведёт именно туда; внутренний /recovery/portal
+  // остаётся резервным входом с общей сессией.
   const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
   const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
 
