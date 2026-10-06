@@ -19,7 +19,19 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({ allowedRoles, fallbackUrl 
   }
 
   if (!role || !allowedRoles.includes(role)) {
-    // If they have no role or the wrong role, send them to unauthorized or a specific fallback
+    // Аутентифицированный пользователь с чужой ролью не должен упираться
+    // в тупиковый 403 — возвращаем его в его собственный раздел
+    // (агент открыл /crm/dashboard -> Agent Workspace, агент открыл
+    // /trade -> /crm/workspace, клиент открыл /crm -> трейдинг).
+    // Явный fallbackUrl сохраняет страницу /unauthorized для внутренних
+    // guards с повышением привилегий (agent -> kyc-review и т.п.).
+    if (!fallbackUrl && role) {
+      if (role === 'admin' || role === 'trade_admin') return <Navigate to="/admin/dashboard" replace />;
+      if (role === 'director' || role === 'crm_admin') return <Navigate to="/crm/dashboard" replace />;
+      if (role === 'manager') return <Navigate to="/crm/manager" replace />;
+      if (role === 'agent') return <Navigate to="/crm/workspace" replace />;
+      if (role === 'client') return <Navigate to="/trade/dashboard" replace />;
+    }
     return <Navigate to={fallbackUrl || "/unauthorized"} replace />;
   }
 

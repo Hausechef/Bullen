@@ -5,7 +5,10 @@ import { logger } from "../lib/logger";
 const router = Router();
 
 function getAdminClient() {
+  // SSRF-защита: базовый URL — только https на *.supabase.co (allowlist)
   const url = process.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"] || "";
+  if (url && !/^https:\/\/[\w-]+\.supabase\.co$/.test(url)) throw new Error("Supabase URL rejected by allowlist");
+  const adminCredentialsConfigured = Boolean(url);
   const key = process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
   if (!url || !key) throw new Error("Supabase admin credentials not configured");
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -80,8 +83,16 @@ router.post("/workers", async (req, res) => {
       res.status(400).json({ error: "email, password and role are required" });
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: "Invalid email address" });
+      return;
+    }
     if (!CRM_ROLES.includes(role as CrmRole)) {
       res.status(400).json({ error: `role must be one of: ${CRM_ROLES.join(", ")}` });
+      return;
+    }
+    if (full_name && full_name.length > 120) {
+      res.status(400).json({ error: "full_name is too long" });
       return;
     }
     if (password.length < 8) {
@@ -132,6 +143,16 @@ router.patch("/workers/:id", async (req, res) => {
 
     const { id } = req.params as { id: string };
     const { role, full_name } = req.body as { role?: string; full_name?: string };
+
+    // Валидация id до обращения к БД
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      res.status(400).json({ error: "Invalid worker id" });
+      return;
+    }
+    if (full_name !== undefined && full_name.length > 120) {
+      res.status(400).json({ error: "full_name is too long" });
+      return;
+    }
 
     if (role && !CRM_ROLES.includes(role as CrmRole)) {
       res.status(400).json({ error: `role must be one of: ${CRM_ROLES.join(", ")}` });

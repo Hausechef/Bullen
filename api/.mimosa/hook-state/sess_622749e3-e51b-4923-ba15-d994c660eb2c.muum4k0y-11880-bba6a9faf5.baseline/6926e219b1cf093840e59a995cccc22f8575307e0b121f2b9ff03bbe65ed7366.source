@@ -1,0 +1,119 @@
+import { getAdminClient } from "../../_lib/supabase.js";
+import { requirePaymentAdmin, requirePaymentStaff } from "../../_lib/payment-auth.js";
+
+// Admin deposit details + manual completion action.
+//
+// GET  — staff view roles: deposit, customer, provider event history, audit.
+// POST — platform 'admin' only, action "mark_paid": the operational fallback
+//        while webhook verification is pending (TRAPAY_DOCUMENTATION_REQUIRED).
+//        The admin confirms the payment in the TRAPAY dashboard first; the
+//        actual credit runs through credit_trapay_deposit — the same atomic,
+//        row-locked, exactly-once RPC the webhook path uses.
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function handler(req: any, res: any) {
+  const id = String(req.query?.id ?? "");
+  if (!UUID_RE.test(id)) {
+    res.status(400).json({ error: "Invalid deposit id" });
+    return;
+  }
+  const supabase = getAdminClient();
+
+  if (req.method === "GET") {
+    const caller = await requirePaymentStaff(req, res);
+    if (!caller) return;
+
+    const { data: deposit } = await supabase
+      .from("deposits")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (!deposit) {
+      res.status(404).json({ error: "Deposit not found" });
+      return;
+    }
+    const [{ data: user }, { data: events }, { data: audit }] = await Promise.all([
+      supabase.from("users").select("id, email, full_name, display_name").eq("id", deposit.user_id).maybeSingle(),
+      supabase.from("trapay_events").select("id, event_type, provider_status, verified, processed, received_at, processed_at, error").eq("deposit_id", id).order("received_at", { ascending: false }),
+      supabase.from("company_payment_audit").select("id, action, field_name, details, created_at, admin_id").eq("details->>deposit_id", id).order("created_at", { ascending: false }),
+    ]);
+
+    res.json({
+      deposit: {
+        ...deposit,
+        amount: Number(deposit.amount),
+      },
+      customer: user ?? null,
+      events: events ?? [],
+      audit: audit ?? [],
+    });
+    return;
+  }
+
+  if (req.method === "POST") {
+    const caller = await requirePaymentAdmin(req, res);
+    if (!caller) return;
+    const action = String(req.body?.action ?? "");
+    if (action !== "mark_paid") {
+      res.status(400).json({ error: "Unsupported action" });
+      return;
+    }
+
+    const { data: deposit } = await supabase
+      .from("deposits")
+      .select("id, order_id, status, amount, currency, company_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!deposit) {
+      res.status(404).json({ error: "Deposit not found" });
+      return;
+    }
+    if (deposit.status === "PAID") {
+      res.status(409).json({ error: "Deposit is already paid" });
+      return;
+    }
+    if (deposit.status !== "PENDING" && deposit.status !== "PROCESSING") {
+      res.status(409).json({ error: `Deposit in status ${deposit.status} cannot be marked paid` });
+      return;
+    }
+
+    const { data: credit } = await supabase.rpc("credit_trapay_deposit", {
+      p_deposit_id: deposit.id,
+      p_expected_amount: Number(deposit.amount),
+      p_expected_currency: deposit.currency,
+      p_source: "MANUAL_ADMIN",
+    });
+
+    if (!credit || credit.ok !== true) {
+      const reason = credit?.error ?? "rpc_error";
+      await supabase.from("company_payment_audit").insert({
+        company_id: deposit.company_id,
+        admin_id: caller.id,
+        action: "TRAPAY_DEPOSIT_MANUAL_MARK_PAID_REJECTED",
+        field_name: "deposits.status",
+        details: { deposit_id: deposit.id, order_id: deposit.order_id, reason },
+      });
+      res.status(409).json({ error: `Credit refused: ${reason}` });
+      return;
+    }
+
+    await supabase.from("company_payment_audit").insert({
+      company_id: deposit.company_id,
+      admin_id: caller.id,
+      action: "TRAPAY_DEPOSIT_MANUAL_MARK_PAID",
+      field_name: "deposits.status",
+      details: { deposit_id: deposit.id, order_id: deposit.order_id, amount: Number(deposit.amount), currency: deposit.currency },
+    });
+
+    console.info(JSON.stringify({
+      scope: "trapay.manual_credit", depositId: deposit.id, orderId: deposit.order_id,
+      adminId: caller.id, amount: Number(deposit.amount), currency: deposit.currency,
+    }));
+
+    res.json({ ok: true, status: "PAID" });
+    return;
+  }
+
+  res.status(405).json({ error: "Method not allowed" });
+}

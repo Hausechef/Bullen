@@ -1,7 +1,6 @@
 # 07 — Browser Function Matrix
 
 **BROWSER_AUDIT = NOT_AVAILABLE.** This sandbox's outbound network is restricted to an
-allowlisted proxy; both `curl` and the `WebFetch` tool returned HTTP 403 against the live Vercel
 preview URL and the Supabase host (confirmed against `example.com` as a neutral control, which
 also 403'd — this is a blanket egress policy, not something specific to this app). Chromium is
 pre-installed in this environment, but a Playwright session would need the same blocked network
@@ -14,7 +13,6 @@ in a live browser.
 **No**, based on the following non-browser evidence, but this is an honest risk call, not a
 verified-clean claim:
 - The production build succeeds (`vite build`, 06_test_build_evidence.md) — the app is structurally sound enough to compile and bundle.
-- Vercel's own build/deploy pipeline (external ground truth, observed via GitHub webhook activity in this PR) reported `Ready` for the commits pushed this session.
 - This codebase has an established history of prior PRs (#17–#25) in this same project that were merged and are presumably running in production without reported breakage — this audit did not re-verify those, but their existence is corroborating (not conclusive) evidence the deployment pipeline and general app shell work.
 - The two P0/P1 fixes made this session were database-layer (RLS) and build-config (tsconfig) changes — neither alters any client-side rendering logic, route structure, or component tree, so the blast radius for a *new* UI regression from this session's changes specifically is low.
 

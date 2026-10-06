@@ -1,0 +1,191 @@
+import crypto from "node:crypto";
+import { getAdminClient } from "../_lib/supabase.js";
+import { requireUser } from "../_lib/payment-auth.js";
+import { clientIp, resolveRequestOrigin } from "../_lib/http.js";
+import { hit } from "../_lib/ratelimit.js";
+import { loadCompanyContext, resolveBaseUrl } from "../_lib/trapay/config.js";
+import { createTrapayPayment, TrapayClientError } from "../_lib/trapay/client.js";
+import {
+  resolveGatewayId,
+  validateDepositRequest,
+} from "../_lib/trapay/validation.js";
+import type { DepositMethod } from "../_lib/trapay/types.js";
+
+const DEPOSIT_RATE_LIMIT = 10;
+const DEPOSIT_RATE_WINDOW_MS = 60_000;
+
+export default async function handler(req: any, res: any) {
+  if (req.method === "GET") {
+    const caller = await requireUser(req, res);
+    if (!caller) return;
+
+    const supabase = getAdminClient();
+    const { data, error } = await supabase
+      .from("deposits")
+      .select("id, order_id, method, amount, currency, status, created_at, paid_at")
+      .eq("user_id", caller.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) {
+      res.status(500).json({ error: "Failed to load deposits" });
+      return;
+    }
+    res.json({ deposits: data ?? [] });
+    return;
+  }
+
+  if (req.method === "POST") {
+    const caller = await requireUser(req, res);
+    if (!caller) return;
+
+    const ip = clientIp(req);
+    if (!hit(`dep:${caller.id}`, DEPOSIT_RATE_LIMIT, DEPOSIT_RATE_WINDOW_MS).allowed ||
+        !hit(`dep-ip:${ip}`, 30, DEPOSIT_RATE_WINDOW_MS).allowed) {
+      res.status(429).json({ error: "Too many requests, please retry shortly" });
+      return;
+    }
+
+    const supabase = getAdminClient();
+
+    // Profile re-check server-side: KYC-verified users only (same gate as the
+    // existing manual deposit flow).
+    const { data: profile } = await supabase
+      .from("users")
+      .select("kyc_status")
+      .eq("id", caller.id)
+      .maybeSingle();
+    if (!profile || profile.kyc_status !== "VERIFIED") {
+      res.status(403).json({ error: "KYC verification is required before depositing" });
+      return;
+    }
+
+    const context = await loadCompanyContext(supabase);
+    if (!context) {
+      res.status(500).json({ error: "Payment configuration is not available" });
+      return;
+    }
+    const settings = context.settings;
+    if (!settings || !settings.enabled) {
+      res.status(403).json({ error: "Online deposits are not available" });
+      return;
+    }
+
+    const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+    const validated = validateDepositRequest(
+      { amount: body.amount, currency: body.currency, method: body.method },
+      settings,
+    );
+    if (!validated.ok) {
+      res.status(400).json({ error: validated.errors.join("; ") });
+      return;
+    }
+    const { amount, currency, method } = validated.value;
+
+    const gatewayId = resolveGatewayId(method, settings);
+    if (!gatewayId) {
+      res.status(500).json({ error: "Payment method is misconfigured" });
+      return;
+    }
+    const baseUrl = resolveBaseUrl(settings);
+    if (!baseUrl) {
+      res.status(500).json({ error: "Payment provider URL is not configured" });
+      return;
+    }
+    if (!settings.public_key) {
+      res.status(500).json({ error: "Payment provider is not configured" });
+      return;
+    }
+
+    const origin = resolveRequestOrigin(req);
+    if (!origin) {
+      res.status(500).json({ error: "Request origin could not be determined" });
+      return;
+    }
+
+    // Order id: unique + unpredictable + traceable (not userId+timestamp).
+    const orderId = `BH-DEP-${crypto.randomUUID()}`;
+
+    // Hard server-side double-click guard: the partial unique index on
+    // (user_id) where status is active makes a second concurrent creation fail.
+    const { data: deposit, error: insertError } = await supabase
+      .from("deposits")
+      .insert({
+        company_id: context.company.id,
+        user_id: caller.id,
+        order_id: orderId,
+        method,
+        amount,
+        currency,
+        status: "CREATED",
+      })
+      .select("id, order_id")
+      .single();
+
+    if (insertError) {
+      if (insertError.code === "23505") {
+        res.status(409).json({ error: "You already have an active deposit. Complete or wait for it to finish." });
+        return;
+      }
+      res.status(500).json({ error: "Failed to create deposit" });
+      return;
+    }
+
+    const statusUrl = (page: string) => `${origin}/trade/deposit/${page}?deposit=${deposit.id}`;
+
+    try {
+      const result = await createTrapayPayment(baseUrl, {
+        publicKey: settings.public_key,
+        gateway: gatewayId,
+        orderId: deposit.order_id,
+        amount,
+        currency,
+        successUrl: statusUrl("success"),
+        failUrl: statusUrl("failed"),
+        pendingUrl: statusUrl("pending"),
+      });
+
+      const { error: updateError } = await supabase
+        .from("deposits")
+        .update({
+          status: "PENDING",
+          provider_payment_id: result.providerPaymentId,
+          provider_status: result.providerStatus,
+          checkout_url: result.proxyUrl,
+        })
+        .eq("id", deposit.id);
+      if (updateError) {
+        console.error(JSON.stringify({
+          scope: "trapay.create", depositId: deposit.id, orderId: deposit.order_id,
+          kind: "deposit_update_failed", error: updateError.message,
+        }));
+        res.status(500).json({ error: "Deposit created but checkout could not be finalized. Contact support." });
+        return;
+      }
+
+      console.info(JSON.stringify({
+        scope: "trapay.create", depositId: deposit.id, orderId: deposit.order_id,
+        providerPaymentId: result.providerPaymentId, amount, currency,
+        method: method satisfies DepositMethod, companyId: context.company.id,
+      }));
+
+      res.status(201).json({ depositId: deposit.id, orderId: deposit.order_id, checkoutUrl: result.proxyUrl });
+    } catch (err) {
+      const kind = err instanceof TrapayClientError ? err.kind : "unexpected_error";
+      const httpStatus = err instanceof TrapayClientError ? err.httpStatus : undefined;
+      // Deposit stays CREATED with a safe failure reason; no credit happened.
+      await supabase
+        .from("deposits")
+        .update({ failure_reason: kind })
+        .eq("id", deposit.id);
+      console.error(JSON.stringify({
+        scope: "trapay.create", depositId: deposit.id, orderId: deposit.order_id,
+        kind, providerHttpStatus: httpStatus ?? null,
+      }));
+      res.status(502)
+        .json({ error: "The payment provider is currently unavailable. Your deposit was not charged. Please retry later." });
+    }
+    return;
+  }
+
+  res.status(405).json({ error: "Method not allowed" });
+}

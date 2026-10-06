@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Bitcoin, DollarSign, Gem, Loader2, WifiOff } from 'lucide-react';
 import type { Quote, FeedMode } from './useMarketPreview';
+import { GlassCard3D } from './GlassCard3D';
 
 const fmt = (p: number) =>
   p >= 1000 ? p.toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -61,7 +62,7 @@ interface WidgetProps {
 }
 
 const MarketWidget: React.FC<WidgetProps> = ({ title, icon, quotes, mode, unit, loading, error, note }) => (
-  <div className="card-premium p-5">
+  <GlassCard3D className="p-5">
     <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span className="text-gold">{icon}</span>
@@ -86,7 +87,7 @@ const MarketWidget: React.FC<WidgetProps> = ({ title, icon, quotes, mode, unit, 
     )}
 
     {note && <p className="mt-3 text-[10px] leading-relaxed text-text-dim">{note}</p>}
-  </div>
+  </GlassCard3D>
 );
 
 interface MarketWidgetsProps {

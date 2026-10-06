@@ -1,0 +1,211 @@
+{
+  "schema_version": "mimosa-task-review/v2",
+  "run_id": "20261006T034814595Z-21628-5a8888b57403",
+  "run_status": "completed",
+  "errors": [],
+  "coverage": {
+    "schema_version": "mimosa-hook-coverage/v1",
+    "status": "complete",
+    "scope": "hook_observed_diff",
+    "baseline": {
+      "complete": true,
+      "captured_files": 372,
+      "candidate_limit": 5000,
+      "truncated": false,
+      "enumeration_error_count": 0,
+      "snapshot_error_count": 0,
+      "compensated_target_count": 3
+    },
+    "change_tracking": {
+      "touched_observed": 3,
+      "touched_retained": 3,
+      "truncated": false,
+      "bash_mutation": false,
+      "bash_discovered": 0,
+      "bash_discovery_limit": 80,
+      "bash_discovery_truncated": false
+    },
+    "candidates": {
+      "eligible_files": 3,
+      "selected_files": 3,
+      "limit": 20,
+      "truncated": false
+    },
+    "scanning": {
+      "required_files": 3,
+      "scanned_files": 3,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "project_checks_required": 0,
+      "project_checks_completed": 0
+    },
+    "notification": {
+      "eligible_findings": 0,
+      "detailed_findings": 0,
+      "detail_limit": 3,
+      "truncated": false
+    },
+    "reason_counts": {},
+    "reasons": [],
+    "reasons_truncated": false
+  },
+  "generated_at": "2026-10-06T03:48:14.595Z",
+  "session_id": "sess_a76257b4-a891-43e6-8ec3-1de36c05c063",
+  "target": ".",
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "rules_version": "unavailable",
+  "diff_hash": "1cc4c233b9b7e02d446bf3a353681adf97d8a76ee441ce35b64d69dfb57e7bdb",
+  "diff": {
+    "algorithm": "sha256",
+    "changed_file_count": 3,
+    "changed_files": [
+      {
+        "file": "artifacts/bullenhaus/src/app/login/marketing/GlassCard3D.tsx",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 37
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "b0e41e91a65041c1a2b0cdf7b9150dbc1a944f2c01d5a635fa0442f7af5f6f5f"
+      },
+      {
+        "file": "artifacts/bullenhaus/src/app/login/marketing/MarketWidgets.tsx",
+        "ranges": [
+          {
+            "start": 4,
+            "end": 4
+          },
+          {
+            "start": 65,
+            "end": 65
+          },
+          {
+            "start": 90,
+            "end": 90
+          }
+        ],
+        "before_hash": "00c093eab46774286ea622cfb1d8ca4270baef5b1124038346f7c4b1da76544d",
+        "after_hash": "34bfc4f900c0c40804489187681acbc6f3d54f2bdb9e45fa76731c6b699756ac"
+      },
+      {
+        "file": "artifacts/bullenhaus/src/app/login/marketing/PromoSections.tsx",
+        "ranges": [
+          {
+            "start": 6,
+            "end": 6
+          },
+          {
+            "start": 43,
+            "end": 43
+          },
+          {
+            "start": 49,
+            "end": 49
+          },
+          {
+            "start": 57,
+            "end": 57
+          },
+          {
+            "start": 90,
+            "end": 90
+          },
+          {
+            "start": 94,
+            "end": 94
+          },
+          {
+            "start": 98,
+            "end": 98
+          },
+          {
+            "start": 112,
+            "end": 112
+          },
+          {
+            "start": 116,
+            "end": 116
+          },
+          {
+            "start": 149,
+            "end": 149
+          },
+          {
+            "start": 156,
+            "end": 156
+          },
+          {
+            "start": 164,
+            "end": 164
+          },
+          {
+            "start": 180,
+            "end": 180
+          },
+          {
+            "start": 183,
+            "end": 183
+          },
+          {
+            "start": 197,
+            "end": 197
+          }
+        ],
+        "before_hash": "cfc327392dee95ab52373a8b7616873eaa8966e025c6ba3d7fadeb0c9ba1fd03",
+        "after_hash": "f08ed60179da5ab5657ad1e389046050ee1e33dfa1d2968d920524f9ae6327d0"
+      }
+    ]
+  },
+  "timing": {
+    "started_at": "2026-10-06T03:48:12.980Z",
+    "completed_at": "2026-10-06T03:48:14.595Z",
+    "duration_ms": 1615,
+    "measurement": "hook_wall_clock"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "model_calls": 0,
+    "measurement": "known-zero"
+  },
+  "telemetry": {
+    "schemaVersion": "mimosa-gate-telemetry/v1",
+    "profile": "gate",
+    "operation": "Stop",
+    "outcome": "complete",
+    "latencyMs": 1615,
+    "peakMemoryBytes": 141230080,
+    "memoryMeasurement": "max-observed-process-rss",
+    "scannedFiles": 3,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "measurement": "not-applicable"
+    },
+    "denyCount": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "total": 0,
+      "modelCalls": 0,
+      "measurement": "known-zero"
+    }
+  },
+  "finding_count": 0,
+  "rewake_finding_count": 0,
+  "evidence_boundary": {
+    "scan": "candidate",
+    "static_fix_verification": "observed_static_only",
+    "runtime_verification": "not_performed"
+  },
+  "finding_events": [],
+  "findings": [],
+  "artifacts": {
+    "immutable_report": ".mimosa/reports/task-review-sess_a76257b4-a891-43e6-8ec3-1de36c05c063-20261006T034814595Z-21628-5a8888b57403.json",
+    "latest_report": ".mimosa/reports/task-review-sess_a76257b4-a891-43e6-8ec3-1de36c05c063.json",
+    "history_summary": ".mimosa/history/run-20261006T034814595Z-21628-5a8888b57403.json"
+  }
+}

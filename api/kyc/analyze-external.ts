@@ -58,6 +58,11 @@ async function requireKycReviewer(req: any, res: any): Promise<string | null> {
 }
 
 function fetchWithTimeout(url: string, init: RequestInit) {
+  // SSRF-защита: исходящие AI-запросы — только https на allowlist-хост
+  const parsedUrl = new URL(url);
+  if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== "openrouter.ai") {
+    throw new Error("Blocked outbound request to non-allowlisted host");
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), Number.isFinite(TIMEOUT_MS) ? TIMEOUT_MS : 30000);
   return fetch(url, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));

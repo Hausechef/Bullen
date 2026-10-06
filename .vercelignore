@@ -1,11 +1,13 @@
-# Keep test files out of the Vercel deployment: anything under api/**/*.test.ts
-# would otherwise be picked up by Vercel's zero-config function detection and
-# published as a bogus serverless endpoint (e.g. /api/kyc/analyze-external.test).
+# Backend API: 38 endpoints exceed the Hobby plan limit of 12 serverless
+# functions, and they require server-only secrets that are not configured.
+# The SPA is deployed static-only; /api/* calls need a separate backend.
+api/
+
+# Test files would be picked up by Vercel's zero-config function detection.
 **/*.test.ts
 **/*.test.tsx
 
-# Local runtime state, database backups, generated reports and UI captures must
-# never be part of a production deployment upload.
+# Local runtime state must never be part of a production deployment upload.
 .local/
 output/
 attached_assets/

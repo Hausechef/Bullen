@@ -22,10 +22,8 @@ Detailed file-by-file findings from the read-only audit.
 
 | Path | Duplicates | Confidence | Reason | Evidence |
 |------|------------|------------|--------|----------|
-| `api/crm/workers/[id].ts` + `api/crm/workers/[id]/reset-password.ts` | DUPLICATE routing | HIGH | Both `[id].ts` AND `[id]/` directory exist — Vercel file-based routing ambiguity | `ls api/crm/workers/` shows both `[id].ts` (file) and `[id]/` (directory with `reset-password.ts`) |
 | `api/v1/advertisers/[id].ts` + `api/v1/advertisers/[id]/` | DUPLICATE routing | HIGH | Same pattern — `[id].ts` file + `[id]/` directory with `stats.ts` and `codes/` | `ls api/v1/advertisers/` shows both |
 | `artifacts/api-server/src/routes/crm-workers.ts` | Duplicates `api/crm/workers/` + `supabase/functions/crm-workers/` | HIGH | CRM worker CRUD implemented 3 times | All 3 implement create/delete/reset-password for CRM workers |
-| `artifacts/api-server/src/routes/advertisers.ts` | Duplicates `api/v1/advertisers/` | HIGH | Advertiser CRUD in both Vercel + Express | Both implement GET/POST/PATCH/DELETE for advertisers |
 | `artifacts/api-server/src/routes/ai.ts` | Duplicates `api/ai/{chat,status}.ts` | HIGH | AI proxy in both | Both proxy OpenRouter |
 | `lib/api-zod/` + `lib/api-client-react/` + `lib/api-spec/` | GENERATED duplicate | MEDIUM | Orval-generated from OpenAPI, but OpenAPI only defines `/api/healthz` | `lib/api-spec/openapi.yaml` only has healthz; generated code only has HealthCheckResponse |
 | `motion` v12 + `framer-motion` v12 | DEPENDENCY duplicate | MEDIUM | `motion` is rebranded `framer-motion` | Both in package.json; source uses `motion/react` |
@@ -36,7 +34,6 @@ Detailed file-by-file findings from the read-only audit.
 
 | Path | Confidence | Reason | Evidence |
 |------|------------|--------|----------|
-| `artifacts/api-server/` (entire package) | HIGH | Express backend NOT deployed by Vercel; `vercel.json` only builds `@workspace/bullenhaus` | `vercel.json` build command targets only bullenhaus; api-server has its own `build.mjs` |
 | `lib/db/` (entire package) | MEDIUM | Drizzle ORM installed but schema is empty (19 lines, no models); SQL migrations are sole source of truth | `wc -l lib/db/src/schema/index.ts` = 19 lines (just comments/empty) |
 | `supabase/` (root) | HIGH | Empty except `.temp/linked-project.json`; actual migrations are in `artifacts/bullenhaus/supabase/` | `ls supabase/` shows only `.temp/` |
 | `artifacts/bullenhaus/supabase/config.toml` | HIGH | Contains WRONG project_id `jwdnjrysxrzgtqbvpuxq` (old project); linked-project.json says `sgtmwdlycllbbavrqgzm` | `grep project_id config.toml` vs `linked-project.json` |

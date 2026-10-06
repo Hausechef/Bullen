@@ -2,11 +2,7 @@
 
 ## Workspace packages (pnpm-workspace.yaml)
 
-| Package | Path | Role | Built by Vercel `buildCommand`? |
 |---|---|---|---|
-| `@workspace/bullenhaus` | `artifacts/bullenhaus` | Client trading app (React/Vite SPA) — the deployed frontend | **Yes** — sole target of `vercel.json` `buildCommand` |
-| `@workspace/api-server` | `artifacts/api-server` | Express 5 + Drizzle backend (dev-mode API server per `replit.md`) | No — builds and typechecks clean locally, but not wired into `vercel.json`; its role in production is UNKNOWN from static inspection alone (see 02_project_map.md, Risk R-1) |
-| `@workspace/api-functions` | `api` | Vercel serverless functions (`/api/**`), deployed by Vercel's zero-config Node builder, independent of `buildCommand` | Deployed separately by Vercel platform convention |
 | `mockup-sandbox` | `artifacts/mockup-sandbox` | Design/mockup sandbox app | No |
 | `lib/db`, `lib/api-client-react`, `lib/api-spec`, `lib/api-zod` | `lib/*` | Shared Drizzle schema / generated API client / Zod schemas, consumed by `api-server` | Indirectly, if `api-server` is in the live path |
 | `scripts` | `scripts` | One-off/maintenance scripts | No |

@@ -1,0 +1,61 @@
+import json
+import math
+import zipfile
+from pathlib import Path
+from datetime import datetime, timezone
+import xml.etree.ElementTree as ET
+
+base=Path(__file__).parent
+manifest=json.loads((base.parent/'latest-leads-export.json').read_text(encoding='utf-8'))
+output=json.loads((base.parent/'latest-leads-xlsx.json').read_text(encoding='utf-8'))
+leads=json.loads(Path(manifest['jsonPath']).read_text(encoding='utf-8'))
+ns={'m':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+with zipfile.ZipFile(output['xlsxPath']) as book:
+    assert book.testzip() is None
+    strings=[]
+    if 'xl/sharedStrings.xml' in book.namelist():
+        tree=ET.fromstring(book.read('xl/sharedStrings.xml'))
+        strings=[''.join(si.itertext()) for si in tree.findall('m:si',ns)]
+    sheet=ET.fromstring(book.read('xl/worksheets/sheet1.xml'))
+    cells={c.attrib['r']:c for c in sheet.findall('.//m:sheetData/m:row/m:c',ns)}
+    styles=ET.fromstring(book.read('xl/styles.xml'))
+    formats={int(n.attrib['numFmtId']):n.attrib['formatCode'] for n in styles.findall('m:numFmts/m:numFmt',ns)}
+    xfs=styles.findall('m:cellXfs/m:xf',ns)
+    def value(address):
+        cell=cells.get(address)
+        if cell is None: return None
+        raw=cell.find('m:v',ns)
+        if cell.attrib.get('t')=='s': return strings[int(raw.text)]
+        if cell.attrib.get('t')=='inlineStr': return ''.join(cell.find('m:is',ns).itertext())
+        return raw.text if raw is not None else None
+    mapping={'B':'name','C':'phone','D':'email','E':'country','F':'stage','K':'first_name','L':'last_name','M':'notes','N':'capacity','O':'timezone','P':'assigned_agent_id','Q':'id'}
+    seen=[]
+    for index,lead in enumerate(leads,6):
+        for col,key in mapping.items():
+            expected=lead.get(key)
+            actual=value(f'{col}{index}')
+            assert (actual or None)==(expected or None),f'Value mismatch in {col}{index} ({key})'
+        source=value(f'S{index}')
+        assert (json.loads(source) if source else None)==lead['acquisition_source']
+        phone=cells.get(f'C{index}')
+        if lead['phone']: assert phone.attrib.get('t') in ('s','inlineStr','str'),f'Phone is not text in row {index}'
+        for col,key in [('I','created_at'),('J','updated_at')]:
+            if lead[key]:
+                expected=(datetime.fromisoformat(lead[key])-datetime(1899,12,30,tzinfo=timezone.utc)).total_seconds()/86400
+                assert abs(float(value(f'{col}{index}'))-expected)*86400<0.002,f'Date mismatch in row {index}'
+        seen.append(value(f'Q{index}'))
+    assert len(set(seen))==len(leads)==13533
+    assert float(value('B3'))==len(leads),'Total formula mismatch'
+    assert not any(cell.attrib.get('t')=='e' for cell in cells.values()),'Excel formula error'
+    pane=sheet.find('m:sheetViews/m:sheetView/m:pane',ns)
+    assert pane is not None and pane.attrib.get('ySplit')=='5' and pane.attrib.get('xSplit')=='2',f'Unexpected frozen pane: {None if pane is None else pane.attrib}'
+    tables=[name for name in book.namelist() if name.startswith('xl/tables/table') and name.endswith('.xml')]
+    assert len(tables)==1
+    table=ET.fromstring(book.read(tables[0]))
+    expected_ref=f'A5:S{len(leads)+5}'
+    assert table.attrib['ref']==expected_ref
+    assert table.find('m:autoFilter',ns).attrib['ref']==expected_ref
+    assert table.find('m:tableStyleInfo',ns).attrib.get('showRowStripes') in ('1','true')
+report={'rows':len(leads),'allOriginalFieldsPreserved':True,'phoneCellsAreText':True,'datesAreTyped':True,'filters':True,'freezeRows':5,'freezeColumns':2,'formulaErrors':0}
+(base/'verification.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+print(json.dumps(report))

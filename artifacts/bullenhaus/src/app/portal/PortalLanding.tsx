@@ -82,13 +82,13 @@ function PortalLink({ children, href, to, variant }: PortalLinkProps) {
 
 export default function PortalLanding() {
   const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
-  const recoveryUrl = configuredRecoveryUrl || '/recovery';
+  const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
 
   return (
     <main className="portal-landing">
       <img
         className="portal-landing__background"
-        src="/bullenhaus-portal.jpg"
+        src="/bullenhaus-gateway-wide.jpg"
         alt=""
         aria-hidden="true"
         fetchPriority="high"
@@ -96,7 +96,7 @@ export default function PortalLanding() {
       <div className="portal-landing__atmosphere" aria-hidden="true" />
 
       <nav className="portal-actions" aria-label="Choose a Bullenhaus platform">
-        <PortalLink href={recoveryUrl} variant="recovery">Recovery</PortalLink>
+        <PortalLink href={recoveryProjectUrl} variant="recovery">Recovery</PortalLink>
         <PortalLink to="/trade" variant="trade">Trade</PortalLink>
       </nav>
     </main>

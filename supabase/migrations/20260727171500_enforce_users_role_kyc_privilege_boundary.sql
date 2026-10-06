@@ -34,7 +34,7 @@
 --
 -- The trigger is SECURITY INVOKER so `current_user` still reflects the real
 -- caller. It exempts every privileged server path:
---   * service_role  — the api/** Vercel functions and Supabase edge functions
+--   * service_role  — the api/** backend functions and Supabase edge functions
 --                     (which already re-check rank in code, PR #32);
 --   * SECURITY DEFINER RPCs owned by the DB superuser — approve_deposit,
 --                     approve_withdrawal, execute_spot_trade, sign_premarket_

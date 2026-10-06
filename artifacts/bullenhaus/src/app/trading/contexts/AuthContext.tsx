@@ -49,29 +49,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole((data.role as UnifiedRole));
         setKycStatus((data.kyc_status as any) || 'UNVERIFIED');
       } else {
-        // No row in public.users yet — check auth user_metadata as fallback
-        // (CRM workers may only exist in auth.users with metadata role)
-        const { data: { user } } = await supabase.auth.getUser();
-        const metaRole = user?.user_metadata?.role as UnifiedRole | undefined;
-        if (metaRole && ['client','agent','manager','director','admin','trade_admin','crm_admin'].includes(metaRole)) {
-          setRole(metaRole);
-          setKycStatus('VERIFIED');
-        } else {
-          setRole('client');
-          setKycStatus('UNVERIFIED');
-        }
+        // Roles are authoritative only when they come from public.users/RLS.
+        // auth.user_metadata is user-editable and must never grant privileges.
+        setRole('client');
+        setKycStatus('UNVERIFIED');
       }
     } catch {
-      // On error also try metadata
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const metaRole = user?.user_metadata?.role as UnifiedRole | undefined;
-        if (metaRole && ['client','agent','manager','director','admin','trade_admin','crm_admin'].includes(metaRole)) {
-          setRole(metaRole);
-          setKycStatus('VERIFIED');
-          return;
-        }
-      } catch { /* ignore */ }
+      // A failed profile lookup must fail closed to the unprivileged client UX.
       setRole('client');
       setKycStatus('UNVERIFIED');
     }
@@ -87,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInMockAdmin = (email?: string) => {
     if (!import.meta.env.DEV) return;
     const mockUser = { id: 'admin-mock', email: email || 'admin@bullenhaus.local' } as User;
-    const mockSession = { user: mockUser, access_token: 'mock-token', refresh_token: 'mock', expires_in: 9999, token_type: 'bearer' } as Session;
+    const mockSession = { user: mockUser, access_token: `mock-${crypto.randomUUID()}`, refresh_token: `mock-${crypto.randomUUID()}`, expires_in: 9999, token_type: 'bearer' } as Session;
     setSession(mockSession);
     setUser(mockUser);
     setRole('admin');
@@ -98,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInMockClient = (email?: string) => {
     if (!import.meta.env.DEV) return;
     const mockUser = { id: 'client-mock', email: email || 'client@bullenhaus.local' } as User;
-    const mockSession = { user: mockUser, access_token: 'mock-token', refresh_token: 'mock', expires_in: 9999, token_type: 'bearer' } as Session;
+    const mockSession = { user: mockUser, access_token: `mock-${crypto.randomUUID()}`, refresh_token: `mock-${crypto.randomUUID()}`, expires_in: 9999, token_type: 'bearer' } as Session;
     setSession(mockSession);
     setUser(mockUser);
     setRole('client');
@@ -109,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInMockAgent = (email?: string) => {
     if (!import.meta.env.DEV) return;
     const mockUser = { id: 'agent-mock', email: email || 'agent@bullenhaus.local' } as User;
-    const mockSession = { user: mockUser, access_token: 'mock-token', refresh_token: 'mock', expires_in: 9999, token_type: 'bearer' } as Session;
+    const mockSession = { user: mockUser, access_token: `mock-${crypto.randomUUID()}`, refresh_token: `mock-${crypto.randomUUID()}`, expires_in: 9999, token_type: 'bearer' } as Session;
     setSession(mockSession);
     setUser(mockUser);
     setRole('agent');

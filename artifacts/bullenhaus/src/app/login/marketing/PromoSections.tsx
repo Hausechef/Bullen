@@ -3,6 +3,7 @@ import {
   Coins, LineChart, Zap, ShieldCheck, Bell, Layers, Smartphone, Rocket,
   BrainCircuit, BarChart3, Gauge, Globe, ArrowRight,
 } from 'lucide-react';
+import { GlassCard3D } from './GlassCard3D';
 
 const SectionHeader: React.FC<{ eyebrow: string; title: string; sub?: string }> = ({ eyebrow, title, sub }) => (
   <div className="mx-auto mb-10 max-w-2xl text-center">
@@ -39,13 +40,13 @@ export const PlatformAdvantages: React.FC = () => (
     <div id="adv-title" className="sr-only">Platform advantages</div>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {ADVANTAGES.map(({ icon: Icon, title, desc }) => (
-        <div key={title} className="card-premium surface-hover p-6">
+        <GlassCard3D key={title} className="p-6">
           <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl border border-border-gold bg-gold-soft text-gold">
             <Icon size={20} />
           </div>
           <h3 className="mb-1.5 font-serif text-lg font-semibold text-text">{title}</h3>
           <p className="text-sm leading-relaxed text-text-muted">{desc}</p>
-        </div>
+        </GlassCard3D>
       ))}
     </div>
   </section>
@@ -53,7 +54,7 @@ export const PlatformAdvantages: React.FC = () => (
 
 export const PreMarketSection: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick }) => (
   <section className="panel-shell px-4 py-16" aria-labelledby="premarket-title">
-    <div className="card-premium relative overflow-hidden p-8 md:p-12">
+    <GlassCard3D className="relative overflow-hidden p-8 md:p-12">
       <div className="bg-ambient-gold absolute -right-20 -top-20 h-64 w-64" />
       <div className="relative grid items-center gap-8 lg:grid-cols-2">
         <div>
@@ -86,15 +87,15 @@ export const PreMarketSection: React.FC<{ onCtaClick: () => void }> = ({ onCtaCl
             { icon: ShieldCheck, k: 'Terms', v: 'Contract-backed' },
             { icon: Gauge, k: 'Price', v: 'Fixed at signing' },
           ].map(({ icon: Icon, k, v }) => (
-            <div key={k} className="glass-card p-5">
+            <GlassCard3D key={k} className="p-5">
               <Icon size={18} className="text-gold" />
               <p className="mt-3 text-[11px] uppercase tracking-wider text-text-muted">{k}</p>
               <p className="mt-0.5 font-serif text-lg font-semibold text-text">{v}</p>
-            </div>
+            </GlassCard3D>
           ))}
         </div>
       </div>
-    </div>
+    </GlassCard3D>
   </section>
 );
 
@@ -108,11 +109,11 @@ export const ITodaySection: React.FC = () => (
           { icon: Bell, k: 'Alerts', v: 'Real-time' },
           { icon: Gauge, k: 'Risk radar', v: 'Exposure view' },
         ].map(({ icon: Icon, k, v }) => (
-          <div key={k} className="card-premium surface-hover p-5">
+          <GlassCard3D key={k} className="p-5">
             <Icon size={18} className="text-gold" />
             <p className="mt-3 text-[11px] uppercase tracking-wider text-text-muted">{k}</p>
             <p className="mt-0.5 font-serif text-lg font-semibold text-text">{v}</p>
-          </div>
+          </GlassCard3D>
         ))}
       </div>
 
@@ -145,14 +146,14 @@ export const StrongFeatures: React.FC = () => (
     <div id="feat-title" className="sr-only">Strong platform features</div>
     <div className="grid gap-5 md:grid-cols-3">
       {FEATURES.map(({ icon: Icon, title, desc }) => (
-        <div key={title} className="card-premium relative overflow-hidden p-7">
+        <GlassCard3D key={title} className="relative overflow-hidden p-7">
           <div className="hairline-gold-top absolute inset-x-0 top-0 h-px" />
           <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border-gold bg-gold-soft text-gold">
             <Icon size={22} />
           </div>
           <h3 className="mb-2 font-serif text-xl font-semibold text-text">{title}</h3>
           <p className="text-sm leading-relaxed text-text-muted">{desc}</p>
-        </div>
+        </GlassCard3D>
       ))}
     </div>
   </section>
@@ -160,7 +161,7 @@ export const StrongFeatures: React.FC = () => (
 
 export const OffersSection: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick }) => (
   <section className="panel-shell px-4 py-16" aria-labelledby="offers-title">
-    <div className="card-premium relative overflow-hidden p-8 text-center md:p-14">
+    <GlassCard3D className="relative overflow-hidden p-8 text-center md:p-14">
       <div className="bg-ambient-gold absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2" />
       <div className="relative mx-auto max-w-2xl">
         <p className="label-eyebrow text-gold/80">Limited offer</p>
@@ -176,10 +177,10 @@ export const OffersSection: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick
             { k: 'iTools included', v: 'Full analytics suite' },
             { k: 'Premarket access', v: 'Early allocations' },
           ].map(({ k, v }) => (
-            <div key={k} className="glass-card p-5">
+            <GlassCard3D key={k} className="p-5">
               <p className="text-[11px] uppercase tracking-wider text-text-muted">{k}</p>
               <p className="mt-1 font-serif text-base font-semibold text-gold-light">{v}</p>
-            </div>
+            </GlassCard3D>
           ))}
         </div>
 
@@ -193,6 +194,6 @@ export const OffersSection: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick
           Trading involves risk. Promotional content describes platform features only.
         </p>
       </div>
-    </div>
+    </GlassCard3D>
   </section>
 );

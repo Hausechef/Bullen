@@ -9,6 +9,11 @@ const BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v
 const TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS || "30000");
 
 async function fetchWithTimeout(url: string, init: RequestInit) {
+  // SSRF-защита: исходящие AI-запросы — только https на allowlist-хост
+  const parsedUrl = new URL(url);
+  if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== "openrouter.ai") {
+    throw new Error("Blocked outbound request to non-allowlisted host");
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), Number.isFinite(TIMEOUT_MS) ? TIMEOUT_MS : 30000);
   try {

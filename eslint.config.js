@@ -32,7 +32,7 @@ export default tseslint.config(
       "react-hooks/exhaustive-deps": "warn",
 
       // This codebase intentionally uses `any` at framework boundaries
-      // (Vercel `req: any, res: any`, Supabase payloads). Not a correctness bug.
+      // (server `req: any, res: any`, Supabase payloads). Not a correctness bug.
       "@typescript-eslint/no-explicit-any": "off",
       // Pre-existing unused-import debt: surface, don't block.
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],

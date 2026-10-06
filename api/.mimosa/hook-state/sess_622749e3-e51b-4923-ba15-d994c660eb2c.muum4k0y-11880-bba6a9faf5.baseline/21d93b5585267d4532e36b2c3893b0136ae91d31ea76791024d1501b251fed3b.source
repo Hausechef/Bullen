@@ -1,0 +1,118 @@
+import { TrapayClientError } from "./types.js";
+import type { TrapayCreatePaymentInput, TrapayCreatePaymentResult } from "./types.js";
+
+// TRAPAY payment creation client — server-side only.
+//
+// Uses ONLY the publicly documented sandbox endpoint shape:
+//   POST {base_url}/api/payments/create
+//   body: { public_key, gateway, order_id, amount, currency, success_url, fail_url, pending_url }
+//   response: { success, message, result: { id, orderId, proxy_url, status } }
+//
+// TRAPAY_DOCUMENTATION_REQUIRED: amount units are passed through exactly as
+// configured (major units, matching the documented example) and MUST be
+// re-confirmed against the current official TRAPAY documentation/dashboard
+// before production activation. The production base URL is likewise not
+// guessed anywhere in this codebase — it is admin-provided per company.
+
+const DEFAULT_TIMEOUT_MS = 15000;
+
+export type FetchLike = (url: string, init: any) => Promise<Response>;
+
+function assertHttpUrl(baseUrl: string): string {
+  let url: URL;
+  try {
+    url = new URL(baseUrl);
+  } catch {
+    throw new TrapayClientError("network_error", "invalid_base_url");
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new TrapayClientError("network_error", "invalid_base_url");
+  }
+  // Endpoint path from the public documentation; base URL is company-configured.
+  return `${url.origin.replace(/\/+$/, "")}/api/payments/create`;
+}
+
+// Pure parser: validates the documented response envelope. Safe error messages
+// only — provider response bodies are never echoed to clients.
+export function parseTrapayResponse(body: unknown): TrapayCreatePaymentResult {
+  if (typeof body !== "object" || body === null) {
+    throw new TrapayClientError("malformed_response", "unexpected_trapay_response");
+  }
+  const envelope = body as Record<string, unknown>;
+  if (envelope["success"] !== true) {
+    const message = typeof envelope["message"] === "string" ? envelope["message"] : "";
+    throw new TrapayClientError("http_error", message || "trapay_rejected", 200);
+  }
+  const result = envelope["result"];
+  if (typeof result !== "object" || result === null) {
+    throw new TrapayClientError("malformed_response", "unexpected_trapay_response");
+  }
+  const record = result as Record<string, unknown>;
+  const providerPaymentId = record["id"];
+  const proxyUrl = record["proxy_url"];
+  if (typeof providerPaymentId !== "string" || providerPaymentId.length === 0) {
+    throw new TrapayClientError("malformed_response", "unexpected_trapay_response");
+  }
+  if (typeof proxyUrl !== "string" || !/^https?:\/\//i.test(proxyUrl)) {
+    throw new TrapayClientError("malformed_response", "unexpected_trapay_response");
+  }
+  const orderId = typeof record["orderId"] === "string" ? record["orderId"] : "";
+  const status = typeof record["status"] === "string" ? record["status"] : null;
+  return {
+    providerPaymentId,
+    orderId,
+    proxyUrl: proxyUrl,
+    providerStatus: status,
+  };
+}
+
+export async function createTrapayPayment(
+  baseUrl: string,
+  input: TrapayCreatePaymentInput,
+  fetchImpl: FetchLike = fetch,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<TrapayCreatePaymentResult> {
+  const endpoint = assertHttpUrl(baseUrl);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    let response: Response;
+    try {
+      response = await fetchImpl(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          public_key: input.publicKey,
+          gateway: input.gateway,
+          order_id: input.orderId,
+          amount: input.amount,
+          currency: input.currency,
+          success_url: input.successUrl,
+          fail_url: input.failUrl,
+          pending_url: input.pendingUrl,
+        }),
+        signal: controller.signal,
+      });
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        throw new TrapayClientError("timeout", "trapay_request_timeout");
+      }
+      throw new TrapayClientError("network_error", "trapay_unreachable");
+    }
+
+    if (!response.ok) {
+      // 4xx/5xx: never credit, expose only the status code.
+      throw new TrapayClientError("http_error", "trapay_error", response.status);
+    }
+
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      throw new TrapayClientError("malformed_response", "unexpected_trapay_response");
+    }
+    return parseTrapayResponse(body);
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -1,0 +1,181 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ClipboardList, Loader2, MessageSquarePlus, RefreshCw, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '../../../lib/supabase/browserClient';
+import { useAuth } from '../../trading/contexts/AuthContext';
+import { Button } from '../components/ui/Button';
+
+const STATUSES = ['SUBMITTED', 'TRIAGE', 'INVESTIGATING', 'AWAITING_CLIENT', 'RESOLVED', 'CLOSED'] as const;
+type RecoveryStatus = typeof STATUSES[number];
+
+type RecoveryCase = {
+  id: string;
+  case_number: string;
+  category: string;
+  status: RecoveryStatus;
+  loss_range: string;
+  description: string;
+  contact_email: string | null;
+  platform: string | null;
+  created_at: string;
+  updated_at: string;
+  client: { email: string; full_name: string | null } | null;
+};
+
+type TimelineEvent = {
+  id: string;
+  title: string;
+  body: string | null;
+  visibility: 'CLIENT' | 'INTERNAL';
+  created_at: string;
+};
+type CaseMessage = { id: string; sender_id: string; body: string; created_at: string };
+type CaseEvidence = { id: string; file_name: string; object_path: string; created_at: string };
+
+function stamp(value: string) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+function label(value: string) { return value.replace(/_/g, ' '); }
+
+export function RecoveryCaseWorkspace() {
+  const { user } = useAuth();
+  const [cases, setCases] = useState<RecoveryCase[]>([]);
+  const [selected, setSelected] = useState<RecoveryCase | null>(null);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [messages, setMessages] = useState<CaseMessage[]>([]);
+  const [evidence, setEvidence] = useState<CaseEvidence[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [note, setNote] = useState('');
+  const [messageDraft, setMessageDraft] = useState('');
+  const [visibility, setVisibility] = useState<'CLIENT' | 'INTERNAL'>('INTERNAL');
+  const [filter, setFilter] = useState<RecoveryStatus | 'ALL'>('ALL');
+
+  const loadCases = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('recovery_cases')
+        .select('id, case_number, category, status, loss_range, description, contact_email, platform, created_at, updated_at, client:users!recovery_cases_client_id_fkey(email, full_name)')
+        .order('updated_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const next = (data ?? []) as unknown as RecoveryCase[];
+      setCases(next);
+      setSelected((current) => next.find((item) => item.id === current?.id) ?? next[0] ?? null);
+    } catch (error) {
+      console.error('[RecoveryCaseWorkspace] Unable to load cases', error);
+      toast.error('Unable to load Recovery cases.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadTimeline = useCallback(async (caseId: string) => {
+    const { data, error } = await supabase
+      .from('recovery_case_timeline')
+      .select('id, title, body, visibility, created_at')
+      .eq('case_id', caseId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) { toast.error('Unable to load the case timeline.'); return; }
+    setTimeline((data ?? []) as TimelineEvent[]);
+  }, []);
+
+  const loadMessagesAndEvidence = useCallback(async (caseId: string) => {
+    const [messagesResult, evidenceResult] = await Promise.all([
+      supabase.from('recovery_case_messages').select('id, sender_id, body, created_at').eq('case_id', caseId).order('created_at', { ascending: true }),
+      supabase.from('recovery_case_evidence').select('id, file_name, object_path, created_at').eq('case_id', caseId).order('created_at', { ascending: false }),
+    ]);
+    if (messagesResult.error || evidenceResult.error) { toast.error('Unable to load Recovery case communication.'); return; }
+    setMessages((messagesResult.data ?? []) as CaseMessage[]);
+    setEvidence((evidenceResult.data ?? []) as CaseEvidence[]);
+  }, []);
+
+  const selectedId = selected?.id;
+  useEffect(() => { void loadCases(); }, [loadCases]);
+  useEffect(() => {
+    if (selectedId) { void loadTimeline(selectedId); void loadMessagesAndEvidence(selectedId); }
+    else { setTimeline([]); setMessages([]); setEvidence([]); }
+  }, [loadMessagesAndEvidence, loadTimeline, selectedId]);
+
+  const visibleCases = useMemo(() => filter === 'ALL' ? cases : cases.filter((item) => item.status === filter), [cases, filter]);
+
+  const updateStatus = async (nextStatus: RecoveryStatus) => {
+    if (!selected || selected.status === nextStatus || !user) return;
+    setSaving(true);
+    try {
+      const { error: updateError } = await supabase.from('recovery_cases').update({ status: nextStatus }).eq('id', selected.id);
+      if (updateError) throw updateError;
+      const { error: timelineError } = await supabase.from('recovery_case_timeline').insert({
+        case_id: selected.id,
+        author_id: user.id,
+        event_type: 'STATUS_CHANGE',
+        title: `Status changed to ${label(nextStatus)}`,
+        visibility: 'CLIENT',
+      });
+      if (timelineError) throw timelineError;
+      toast.success('Case status updated.');
+      await loadCases();
+      await loadTimeline(selected.id);
+    } catch (error) {
+      console.error('[RecoveryCaseWorkspace] Unable to update status', error);
+      toast.error('Unable to update the Recovery case.');
+    } finally { setSaving(false); }
+  };
+
+  const addNote = async () => {
+    if (!selected || !user || !note.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('recovery_case_timeline').insert({
+        case_id: selected.id,
+        author_id: user.id,
+        event_type: 'NOTE',
+        title: visibility === 'CLIENT' ? 'Case update' : 'Internal note',
+        body: note.trim(),
+        visibility,
+      });
+      if (error) throw error;
+      setNote('');
+      toast.success(visibility === 'CLIENT' ? 'Client update posted.' : 'Internal note saved.');
+      await loadTimeline(selected.id);
+    } catch (error) {
+      console.error('[RecoveryCaseWorkspace] Unable to add note', error);
+      toast.error('Unable to save this note.');
+    } finally { setSaving(false); }
+  };
+
+  const sendMessage = async () => {
+    if (!selected || !user || !messageDraft.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('recovery_case_messages').insert({ case_id: selected.id, sender_id: user.id, body: messageDraft.trim() });
+      if (error) throw error;
+      setMessageDraft('');
+      await loadMessagesAndEvidence(selected.id);
+      toast.success('Client message sent.');
+    } catch (error) {
+      console.error('[RecoveryCaseWorkspace] Unable to send message', error);
+      toast.error('Unable to send this client message.');
+    } finally { setSaving(false); }
+  };
+
+  const openEvidence = async (item: CaseEvidence) => {
+    const { data, error } = await supabase.storage.from('recovery-evidence').createSignedUrl(item.object_path, 60);
+    if (error || !data?.signedUrl) { toast.error('Unable to open this evidence file.'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  return <div className="space-y-6">
+    <section className="rounded-2xl border border-orange-300/15 bg-[linear-gradient(125deg,rgba(194,79,33,0.14),rgba(12,12,16,0.72)_42%,rgba(212,175,55,0.06))] p-6 shadow-card">
+      <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-orange-200/65">Shared CRM domain</p>
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-4"><div><h2 className="flex items-center gap-3 font-serif text-3xl font-light italic text-aura-platinum"><ShieldCheck className="text-orange-300" /> Recovery case workspace</h2><p className="mt-3 max-w-2xl text-sm text-aura-platinum/50">Triage client-submitted cases, maintain a private operational timeline, and publish only deliberate client updates.</p></div><Button variant="secondary" onClick={loadCases} isLoading={loading}>{!loading && <RefreshCw className="h-3.5 w-3.5" />} Refresh</Button></div>
+    </section>
+    <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.4fr)]">
+      <section className="rounded-xl border border-glass-border bg-black/20 p-4"><div className="mb-4 flex items-center justify-between gap-3"><div className="flex items-center gap-2 text-sm text-aura-platinum"><ClipboardList className="h-4 w-4 text-orange-300" /> Cases</div><select value={filter} onChange={(e) => setFilter(e.target.value as RecoveryStatus | 'ALL')} className="rounded-lg border border-glass-border bg-black/30 px-2 py-1.5 text-[10px] text-aura-platinum"><option value="ALL">All statuses</option>{STATUSES.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></div>{loading ? <div className="flex justify-center py-16 text-aura-platinum/40"><Loader2 className="h-5 w-5 animate-spin" /></div> : visibleCases.length === 0 ? <p className="py-16 text-center text-sm text-aura-platinum/40">No Recovery cases in this view.</p> : <div className="space-y-2">{visibleCases.map((item) => <button key={item.id} onClick={() => setSelected(item)} className={`w-full rounded-lg border p-3 text-left transition ${selected?.id === item.id ? 'border-orange-300/50 bg-orange-300/10' : 'border-glass-border bg-black/15 hover:bg-white/[0.03]'}`}><div className="flex justify-between gap-3"><span className="font-mono text-[11px] text-orange-200">{item.case_number}</span><span className="text-[9px] font-bold text-aura-platinum/45">{label(item.status)}</span></div><p className="mt-2 truncate text-sm text-aura-platinum">{item.client?.full_name || item.client?.email || item.contact_email || 'Client'}</p><p className="mt-1 text-[10px] text-aura-platinum/40">{item.category} · {item.loss_range}</p></button>)}</div>}</section>
+      <section className="rounded-xl border border-glass-border bg-black/20 p-5">{!selected ? <div className="flex min-h-80 items-center justify-center text-sm text-aura-platinum/40">Select a Recovery case to begin triage.</div> : <><div className="flex flex-wrap items-start justify-between gap-4 border-b border-glass-border pb-5"><div><p className="font-mono text-xs text-orange-200">{selected.case_number}</p><h3 className="mt-1 font-serif text-2xl italic text-aura-platinum">{selected.client?.full_name || selected.client?.email || selected.contact_email || 'Recovery client'}</h3><p className="mt-2 text-xs text-aura-platinum/45">Submitted {stamp(selected.created_at)} · {selected.category} · {selected.loss_range}</p></div><select value={selected.status} disabled={saving} onChange={(e) => void updateStatus(e.target.value as RecoveryStatus)} className="rounded-lg border border-orange-300/25 bg-orange-300/10 px-3 py-2 text-xs font-semibold text-orange-100"><option value={selected.status}>{label(selected.status)}</option>{STATUSES.filter((status) => status !== selected.status).map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></div><div className="mt-5 grid gap-5 lg:grid-cols-2"><div><p className="text-[10px] font-bold uppercase tracking-widest text-aura-platinum/35">Client statement</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-aura-platinum/70">{selected.description}</p>{selected.platform && <p className="mt-4 text-xs text-aura-platinum/45">Platform: {selected.platform}</p>}</div><div className="rounded-xl border border-glass-border bg-black/20 p-4"><div className="flex items-center gap-2 text-sm text-aura-platinum"><MessageSquarePlus className="h-4 w-4 text-orange-300" /> Add timeline event</div><textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={4000} rows={5} placeholder="Write a factual update or internal triage note." className="mt-3 w-full rounded-lg border border-glass-border bg-black/30 p-3 text-xs leading-5 text-aura-platinum outline-none focus:border-orange-300/40" /><div className="mt-3 flex items-center justify-between gap-3"><select value={visibility} onChange={(e) => setVisibility(e.target.value as 'CLIENT' | 'INTERNAL')} className="rounded-lg border border-glass-border bg-black/30 px-2 py-1.5 text-[10px] text-aura-platinum"><option value="INTERNAL">Internal only</option><option value="CLIENT">Visible to client</option></select><Button variant="primary" onClick={() => void addNote()} isLoading={saving} disabled={!note.trim()}>Save event</Button></div></div></div><div className="mt-6 grid gap-5 border-t border-glass-border pt-5 lg:grid-cols-2"><div><p className="text-[10px] font-bold uppercase tracking-widest text-aura-platinum/35">Timeline</p><div className="mt-3 space-y-3">{timeline.length === 0 ? <p className="text-sm text-aura-platinum/40">No events yet.</p> : timeline.map((event) => <article key={event.id} className="rounded-lg border border-glass-border bg-black/15 p-3"><div className="flex items-center justify-between gap-3"><p className="text-sm text-aura-platinum">{event.title}</p><span className={`text-[9px] font-bold ${event.visibility === 'CLIENT' ? 'text-orange-200' : 'text-aura-platinum/40'}`}>{event.visibility === 'CLIENT' ? 'CLIENT' : 'INTERNAL'}</span></div>{event.body && <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-aura-platinum/55">{event.body}</p>}<p className="mt-2 text-[10px] text-aura-platinum/30">{stamp(event.created_at)}</p></article>)}</div></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-aura-platinum/35">Client communication</p><div className="mt-3 max-h-56 space-y-2 overflow-y-auto">{messages.length === 0 ? <p className="text-sm text-aura-platinum/40">No messages yet.</p> : messages.map((message) => <div key={message.id} className={`rounded-lg p-3 text-xs ${message.sender_id === user?.id ? 'bg-orange-300/10 text-orange-50' : 'bg-black/20 text-aura-platinum/65'}`}><p>{message.body}</p><p className="mt-1 text-[9px] opacity-50">{stamp(message.created_at)}</p></div>)}</div><textarea value={messageDraft} onChange={(e) => setMessageDraft(e.target.value)} maxLength={4000} rows={3} placeholder="Send a message to the client." className="mt-3 w-full rounded-lg border border-glass-border bg-black/30 p-2.5 text-xs text-aura-platinum outline-none focus:border-orange-300/40" /><Button className="mt-2" variant="outline" onClick={() => void sendMessage()} isLoading={saving} disabled={!messageDraft.trim()}>Send client message</Button><p className="mt-5 text-[10px] font-bold uppercase tracking-widest text-aura-platinum/35">Evidence</p><div className="mt-2 space-y-1">{evidence.length === 0 ? <p className="text-sm text-aura-platinum/40">No evidence attached.</p> : evidence.map((item) => <button key={item.id} onClick={() => void openEvidence(item)} className="block max-w-full truncate text-left text-xs text-orange-200 hover:text-orange-100">{item.file_name}</button>)}</div></div></div></>}</section>
+    </div>
+  </div>;
+}

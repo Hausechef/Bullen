@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261005T031409663Z-8828-ed707bd7eed1",
+  "runId": "20261005T031409663Z-8828-ed707bd7eed1",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "diffHash": "61b9d0b6a9f7207f65775b8626975f89bf0c6f4e917288905541c4a154f1530d",
+  "rulesVersion": "unavailable",
+  "sessionHash": "be0fe72ddffd33abee3a44f8f40614970e18500e34337ef137d8837ed63d58b5",
+  "reportRef": ".mimosa/reports/task-review-sess_622749e3-e51b-4923-ba15-d994c660eb2c-20261005T031409663Z-8828-ed707bd7eed1.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "api/admin/payments/trapay/index.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/app/trading/pages/dashboard/DepositResult.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/app/trading/pages/dashboard/Transactions.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-05T03:14:10.341Z"
+}

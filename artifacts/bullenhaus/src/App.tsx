@@ -25,6 +25,8 @@ import { ForgotPassword } from './app/trading/pages/auth/ForgotPassword';
 import { ResetPassword } from './app/trading/pages/auth/ResetPassword';
 import { AuthLayout } from './app/trading/pages/auth/AuthLayout';
 import PortalLanding from './app/portal/PortalLanding';
+import { RecoveryLanding } from './app/recovery/RecoveryLanding';
+import { RecoveryClientPortal } from './app/recovery/RecoveryClientPortal';
 
 // Trade Hooks
 import { useMarketEngine } from './app/trading/hooks/useMarketEngine';
@@ -38,6 +40,8 @@ const TradeTerminal = React.lazy(() => import('./app/trading/pages/dashboard/Tra
 const TradePreMarket = React.lazy(() => import('./app/trading/pages/dashboard/PreMarket').then(m => ({ default: m.PreMarket })));
 const TradePortfolio = React.lazy(() => import('./app/trading/pages/dashboard/Portfolio').then(m => ({ default: m.Portfolio })));
 const TradeTransactions = React.lazy(() => import('./app/trading/pages/dashboard/Transactions').then(m => ({ default: m.Transactions })));
+const TradeDeposit = React.lazy(() => import('./app/trading/pages/dashboard/DepositPage').then(m => ({ default: m.DepositPage })));
+const TradeDepositResult = React.lazy(() => import('./app/trading/pages/dashboard/DepositResult').then(m => ({ default: m.DepositResult })));
 const TradeReferrals = React.lazy(() => import('./app/trading/pages/dashboard/Referrals').then(m => ({ default: m.Referrals })));
 const TradeKYC = React.lazy(() => import('./app/trading/pages/dashboard/KYC').then(m => ({ default: m.KYC })));
 const TradeNotifications = React.lazy(() => import('./app/trading/pages/dashboard/NotificationsPage').then(m => ({ default: m.Notifications })));
@@ -60,6 +64,7 @@ const TradeAdminSupport = React.lazy(() => import('./app/trading/pages/admin/Adm
 const TradeCRMSyncPanel = React.lazy(() => import('./app/trading/pages/admin/CRMSyncPanel').then(m => ({ default: m.CRMSyncPanel })));
 const TradeAdminDeposits = React.lazy(() => import('./app/trading/pages/admin/AdminDeposits').then(m => ({ default: m.AdminDeposits })));
 const TradeAdminWithdrawals = React.lazy(() => import('./app/trading/pages/admin/AdminWithdrawals').then(m => ({ default: m.AdminWithdrawals })));
+const TradeAdminPayments = React.lazy(() => import('./app/trading/pages/admin/AdminPayments').then(m => ({ default: m.AdminPayments })));
 
 // Trade Protected Layout
 const TradeProtectedLayout = React.lazy(() => import('./app/trading/components/layout/ProtectedRoute').then(m => ({ default: m.ProtectedRoute })));
@@ -85,7 +90,7 @@ const CRMMessages = React.lazy(() => import('./app/crm/pages/Messages').then(m =
 const CRMSalesScripts = React.lazy(() => import('./app/crm/pages/SalesScripts').then(m => ({ default: m.SalesScripts })));
 const CRMKycReview = React.lazy(() => import('./app/crm/pages/KYCReview').then(m => ({ default: m.KYCReview })));
 const CRMWorkflowRules = React.lazy(() => import('./app/crm/pages/WorkflowRules').then(m => ({ default: m.WorkflowRules })));
-const CRMRecoveryOperations = React.lazy(() => import('./app/crm/pages/RecoveryOperations').then(m => ({ default: m.RecoveryOperations })));
+const CRMRecoveryCaseWorkspace = React.lazy(() => import('./app/crm/pages/RecoveryCaseWorkspace').then(m => ({ default: m.RecoveryCaseWorkspace })));
 
 const Fallback = () => (
   <div className="flex h-dvh w-full items-center justify-center bg-bg">
@@ -128,11 +133,13 @@ const CRMAppWrapper = () => {
 };
 
 
-// Smart redirect: admin → /crm/admin, others → /crm/dashboard
+// Smart redirect: каждая роль — в свой корневой раздел
 const CRMRedirect = () => {
   const { role } = useAuth();
-  if (role === 'admin') return <Navigate to="/crm/admin" replace />;
-  return <Navigate to="/crm/dashboard" replace />;
+  if (role === 'admin' || role === 'crm_admin') return <Navigate to="/crm/admin" replace />;
+  if (role === 'director') return <Navigate to="/crm/dashboard" replace />;
+  if (role === 'manager') return <Navigate to="/crm/manager" replace />;
+  return <Navigate to="/crm/workspace" replace />;
 };
 
 const NotFoundPage = () => (
@@ -157,6 +164,10 @@ const AppContent = () => {
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/" element={<PortalLanding />} />
+          <Route path="/recovery" element={<RecoveryLanding />} />
+          {/* Путь /recovery/* на общем домене проксируется на Recovery-проект,
+              поэтому внутренний портал переезжает на отдельный путь. */}
+          <Route path="/recovery-portal" element={<RecoveryClientPortal />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AuthLayout />}>
             <Route path="/register" element={<Register />} />
@@ -184,6 +195,10 @@ const AppContent = () => {
                 <Route path="terminal" element={<TradeTerminal />} />
                 <Route path="pre-market" element={<TradePreMarket />} />
                 <Route path="portfolio" element={<TradePortfolio />} />
+                <Route path="deposit" element={<TradeDeposit />} />
+                <Route path="deposit/success" element={<TradeDepositResult key="success" variant="success" />} />
+                <Route path="deposit/pending" element={<TradeDepositResult key="pending" variant="pending" />} />
+                <Route path="deposit/failed" element={<TradeDepositResult key="failed" variant="failed" />} />
                 <Route path="transactions" element={<TradeTransactions />} />
                 <Route path="referrals" element={<TradeReferrals />} />
                 <Route path="kyc" element={<TradeKYC />} />
@@ -204,33 +219,37 @@ const AppContent = () => {
             <Route element={<RoleGuard allowedRoles={['agent', 'manager', 'director', 'admin', 'crm_admin']} />}>
               <Route path="/crm" element={<ErrorBoundary><CRMAppWrapper /></ErrorBoundary>}>
                 <Route index element={<CRMRedirect />} />
-                <Route path="dashboard" element={<CRMDashboard />} />
-                <Route path="manager" element={<CRMManagerDashboard />} />
                 <Route path="workspace" element={<CRMAgentWorkspace />} />
                 <Route path="leads" element={<CRMAgentWorkspace />} />
-                <Route path="clients" element={<CRMVIPClients />} />
-                <Route path="vip" element={<CRMVIPOnly />} />
-                <Route path="calls" element={<CRMCallHistory />} />
                 <Route path="my-clients" element={<CRMAgentClients />} />
-                <Route path="telephony" element={<CRMTelephonySettings />} />
-                <Route path="ai-insights" element={<CRMAIInsights />} />
-                <Route path="sales-scripts" element={<CRMSalesScripts />} />
                 <Route path="kanban" element={<CRMLeadKanban />} />
                 <Route path="tasks" element={<CRMTasks />} />
                 <Route path="tickets" element={<CRMTickets />} />
                 <Route path="messages" element={<CRMMessages />} />
                 <Route path="scripts" element={<CRMSalesScripts />} />
-                <Route element={<RoleGuard allowedRoles={['manager', 'director', 'admin', 'crm_admin']} fallbackUrl="/unauthorized" />}>
+                <Route path="recovery" element={<CRMRecoveryCaseWorkspace />} />
+                {/* Менеджерские функции — только manager и выше (чужая роль ->
+                    авто-возврат в свой раздел, см. RoleGuard) */}
+                <Route element={<RoleGuard allowedRoles={['manager', 'director', 'admin', 'crm_admin']} />}>
+                  <Route path="dashboard" element={<CRMDashboard />} />
+                  <Route path="manager" element={<CRMManagerDashboard />} />
+                  <Route path="clients" element={<CRMVIPClients />} />
+                  <Route path="vip" element={<CRMVIPOnly />} />
+                  <Route path="calls" element={<CRMCallHistory />} />
+                  <Route path="telephony" element={<CRMTelephonySettings />} />
+                  <Route path="ai-insights" element={<CRMAIInsights />} />
+                  <Route path="sales-scripts" element={<CRMSalesScripts />} />
                   <Route path="kyc-review" element={<CRMKycReview />} />
+                  <Route path="workflows" element={<CRMWorkflowRules />} />
                 </Route>
-                <Route path="workflows" element={<CRMWorkflowRules />} />
-                <Route path="recovery" element={<CRMRecoveryOperations />} />
-                <Route element={<RoleGuard allowedRoles={['admin', 'crm_admin']} fallbackUrl="/unauthorized" />}>
+                <Route element={<RoleGuard allowedRoles={['admin', 'crm_admin']} />}>
                   <Route path="admin" element={<CRMAdminPanel />} />
                 </Route>
               </Route>
             </Route>
           </Route>
+
+          {/* Recovery case data stays protected by Supabase RLS; staff triage remains in /crm/recovery. */}
 
           {/* ==========================================
               TRADE ADMIN ZONE
@@ -244,6 +263,7 @@ const AppContent = () => {
                 <Route path="kyc" element={<TradeAdminKYC />} />
                 <Route path="deposits" element={<TradeAdminDeposits />} />
                 <Route path="withdrawals" element={<TradeAdminWithdrawals />} />
+                <Route path="payments" element={<TradeAdminPayments />} />
                 <Route path="premarket" element={<TradeAdminPreMarket />} />
                 <Route path="market-control" element={<TradeAdminMarketControl />} />
                 <Route path="transactions" element={<TradeAdminTransactions />} />

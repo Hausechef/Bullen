@@ -4,11 +4,8 @@
 
 - **Branch:** `claude/kyc-workflow-72v84z`, tracking `origin/claude/kyc-workflow-72v84z`.
 - **PR:** #26 (draft), open against `main`, on `eyeofmasona-sudo/Bullenhaus`.
-- **Vercel:** GitHub-integrated, auto-deploys a preview per push to this branch and would deploy
   to production on merge to `main`. `buildCommand` is `pnpm --filter @workspace/bullenhaus run
-  build`; `outputDirectory` is `artifacts/bullenhaus/dist/public`; `api/**` deploys as Vercel
   serverless functions via platform convention, separate from `buildCommand`.
-- **Build evidence (external, not self-reported):** the Vercel GitHub-bot PR comment reported
   `Ready` for both commits pushed this session (`d6e940b` — the `api/tsconfig.json` fix,
   `d85e4c1` — the `.gitignore` fix). This is third-party confirmation from the actual deployment
   platform, not a claim this session invented.
@@ -43,7 +40,6 @@
 
 ## Preview vs. production
 
-- Preview deployment for this PR is live and reported `Ready` per Vercel's own webhook comments.
 - **Preview smoke test could not be performed** from this sandbox (network egress blocked — see
   06/07). This is the main open item before a confident merge: someone with real network access
   (the project owner, or a follow-up session without this sandbox's restrictions) should load the

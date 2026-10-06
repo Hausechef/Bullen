@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261006T014439625Z-20692-688b5a2704b2",
+  "runId": "20261006T014439625Z-20692-688b5a2704b2",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "diffHash": "5128c0df3cc459e85a0ef6bf6e9d072b1f8b0f3ce2a2920c62a402ec101b7bf0",
+  "rulesVersion": "unavailable",
+  "sessionHash": "1f0098cc581d14d3a7a28c612fbafcca9807ae2230e3d5f8939ca92845cafcbb",
+  "reportRef": ".mimosa/reports/task-review-sess_a76257b4-a891-43e6-8ec3-1de36c05c063-20261006T014439625Z-20692-688b5a2704b2.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "artifacts/bullenhaus/src/app/login/marketing/LoginDropdown.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-06T01:44:40.380Z"
+}

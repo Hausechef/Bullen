@@ -2,7 +2,7 @@
 
 ## State (honest)
 
-The remote Supabase project (`sgtmwdlycllbbavrqgzm`) tracks **27** migrations (visible via
+The remote Supabase project (`qktqfedvfqxhrtjnmzmi`) tracks migrations (visible via
 `supabase migration list` / the MCP `list_migrations` tool). Historically these were applied via
 the dashboard / MCP `apply_migration` **without** committing the SQL to this repo, so most of the
 early history (`01`–`14` and the `2026071x` batch through `create_notifications`) exists only as

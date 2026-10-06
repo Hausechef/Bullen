@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261005T095007908Z-20368-f3d608e42272",
+  "runId": "20261005T095007908Z-20368-f3d608e42272",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "diffHash": "b75c95463dd6f4bc0f56b6f83d25c95e9eb765ba00488e1a04947c5dd82aaaaf",
+  "rulesVersion": "unavailable",
+  "sessionHash": "1f0098cc581d14d3a7a28c612fbafcca9807ae2230e3d5f8939ca92845cafcbb",
+  "reportRef": ".mimosa/reports/task-review-sess_a76257b4-a891-43e6-8ec3-1de36c05c063-20261005T095007908Z-20368-f3d608e42272.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "eslint.config.js",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/app/trading/lib/api.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/http.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/ratelimit.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "middleware.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-05T09:50:08.588Z"
+}

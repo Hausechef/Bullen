@@ -73,7 +73,7 @@ Both tables have RLS enabled with these policies:
 npm install -g supabase
 
 # Link your project
-supabase link --project-ref jwdnjrysxrzgtqbvpuxq
+supabase link --project-ref qktqfedvfqxhrtjnmzmi
 
 # Run pending migrations
 supabase db push

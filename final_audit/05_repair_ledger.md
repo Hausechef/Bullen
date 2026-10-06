@@ -4,7 +4,6 @@ Each entry follows the required fix-cycle: re-open → confirm still-actual → 
 list changed files/objects → local verification → regression check → git diff review → secret
 check → micro-audit → status.
 
-## AUDIT-001 — Vercel TS build failure in `api/kyc/analyze-external.ts`
 
 - **Re-confirmed actual:** Yes — user-pasted build log, reproduced the root cause via local `tsc` comparison.
 - **Minimal diff:** `api/tsconfig.json`, `"lib": ["es2022"]` → `"lib": ["es2022", "dom"]`. One line.
@@ -14,7 +13,6 @@ check → micro-audit → status.
 - **Git diff reviewed:** Yes, single-line change, no unrelated edits.
 - **Secret check:** N/A, no secret-shaped content in this file.
 - **Micro-audit:** Confirmed no other `api/*.ts` file relies on `lib: dom` types that could now shadow a Node-specific type in a breaking way (none use `window`/`document`/browser-only globals).
-- **Status: ERROR_CLOSED.** Pushed as commit `d6e940b`; Vercel bot PR comment on this commit reports `Ready`.
 
 ## AUDIT-002 — RLS disabled on 7 policy-bearing tables (P0)
 
@@ -69,7 +67,6 @@ check → micro-audit → status.
 - **Minimal diff:** Added `.env`, `.env.*`, `!.env.example` to `.gitignore`.
 - **Changed files:** `.gitignore`.
 - **Verification:** `git status` clean, no unintended files newly ignored (`.env.example` still tracked).
-- **Status: ERROR_CLOSED.** Pushed as commit `d85e4c1`; Vercel bot PR comment on this commit reports `Ready`.
 
 ## Changed-files ledger (this audit session, cumulative)
 

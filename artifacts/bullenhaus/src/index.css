@@ -263,6 +263,36 @@
     border-color: rgba(212, 175, 55, 0.4);
   }
 
+  /* 3D стеклянная карточка (страница /login): 20% заливка, backdrop blur,
+     наклон за курсором (--tilt-x/--tilt-y ставит GlassCard3D) и блик
+     под указателем (--light-x/--light-y). */
+  .card-glass3d {
+    position: relative;
+    background: rgba(10, 10, 14, 0.2);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 180ms cubic-bezier(0.2, 0.85, 0.25, 1), box-shadow 180ms ease, border-color 180ms ease;
+    will-change: transform;
+  }
+  .card-glass3d:hover {
+    border-color: rgba(212, 175, 55, 0.45);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.3), 0 0 30px rgba(212, 175, 55, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .card-glass3d::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(220px circle at var(--light-x, 50%) var(--light-y, 20%), rgba(255, 255, 255, 0.16), transparent 55%);
+    opacity: 0.65;
+    pointer-events: none;
+  }
+
   /* Premium card — top gold hairline + elevated shadow */
   .card-premium {
     background-color: rgba(18, 18, 20, 0.85);
@@ -517,4 +547,17 @@
       transform: none;
     }
   }
+}
+
+/* Нативные <select>: всплывающий список должен быть читаемым.
+   Без color-scheme браузер рисует попап светлым, а текст наследуется
+   светлым от триггера — крем-на-крем. Явные цвета option страхуют
+   браузеры, игнорирующие color-scheme для попапа. */
+select {
+  color-scheme: dark;
+}
+select option,
+select optgroup {
+  background-color: #17130d;
+  color: #f5e9d0;
 }

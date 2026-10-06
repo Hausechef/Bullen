@@ -35,6 +35,9 @@ export const AdminUsers = () => {
       const { data, error } = await supabase
         .from('users')
         .select('*')
+        // Клиенты Recovery живут в своём разделе (пометка source=recovery) —
+        // в списке пользователей Trade показываем только торговых клиентов.
+        .not('attribution->>source', 'eq', 'recovery')
         .order('created_at', { ascending: false });
       if (error) throw error;
       setUsers(data || []);

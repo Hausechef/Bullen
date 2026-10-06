@@ -1,0 +1,134 @@
+import type {
+  CompanyPaymentSettingsRecord,
+  DepositMethod,
+  PaymentEnvironment,
+} from "./types.js";
+
+// Configuration validation per the production readiness checklist:
+// production activation is refused while any required piece is missing or
+// while the webhook verification specification is still unknown.
+
+export interface ConfigurationValidation {
+  ok: boolean;
+  errors: string[];
+}
+
+function isHttpUrl(value: string | null | undefined): boolean {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+export function validateTrapayConfiguration(
+  settings: CompanyPaymentSettingsRecord,
+  forEnvironment: PaymentEnvironment = settings.environment,
+): ConfigurationValidation {
+  const errors: string[] = [];
+
+  if (!settings.public_key || settings.public_key.trim().length === 0) {
+    errors.push("Missing Public Key");
+  }
+  if (settings.supported_currencies.length === 0) {
+    errors.push("No supported currencies configured");
+  }
+  if (!(settings.minimum_deposit > 0) || !(settings.maximum_deposit >= settings.minimum_deposit)) {
+    errors.push("Invalid deposit limits");
+  }
+
+  const baseUrl = forEnvironment === "PRODUCTION" ? settings.production_base_url : settings.sandbox_base_url;
+  if (!isHttpUrl(baseUrl)) {
+    errors.push(
+      forEnvironment === "PRODUCTION"
+        ? "Missing or invalid Production Base URL"
+        : "Missing or invalid Sandbox Base URL",
+    );
+  }
+
+  if (settings.card_enabled && !settings.card_gateway_id) {
+    errors.push("Missing Card Gateway ID");
+  }
+  if (settings.bank_transfer_enabled && !settings.bank_transfer_gateway_id) {
+    errors.push("Missing Bank Transfer Gateway ID");
+  }
+
+  if (forEnvironment === "PRODUCTION") {
+    if (!settings.webhook_configured) {
+      errors.push("Webhook not configured in the TRAPAY dashboard");
+    }
+    // The webhook signature/verification scheme is not publicly documented.
+    // Until the real specification is obtained from TRAPAY and implemented in
+    // verifyTrapayWebhook, production auto-credit stays disabled (fail-closed).
+    errors.push(
+      "Webhook verification specification unknown (TRAPAY_DOCUMENTATION_REQUIRED) — production auto-credit cannot be enabled",
+    );
+  }
+
+  return { ok: errors.length === 0, errors };
+}
+
+export interface DepositRequestInput {
+  amount: unknown;
+  currency: unknown;
+  method: unknown;
+}
+
+export interface ValidatedDepositRequest {
+  amount: number;
+  currency: string;
+  method: DepositMethod;
+}
+
+// Server-side re-validation of the deposit request. The frontend copy is UX
+// only; this is the enforcement point (amount bounds, currency whitelist,
+// method availability).
+export function validateDepositRequest(
+  input: DepositRequestInput,
+  settings: CompanyPaymentSettingsRecord,
+): { ok: true; value: ValidatedDepositRequest } | { ok: false; errors: string[] } {
+  const errors: string[] = [];
+
+  const amount = typeof input.amount === "number" ? input.amount : Number(input.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    errors.push("Invalid amount");
+  } else {
+    const rounded = Math.round(amount * 100) / 100;
+    if (rounded < Number(settings.minimum_deposit)) {
+      errors.push(`Amount below minimum deposit (${settings.minimum_deposit})`);
+    }
+    if (rounded > Number(settings.maximum_deposit)) {
+      errors.push(`Amount above maximum deposit (${settings.maximum_deposit})`);
+    }
+  }
+
+  const currency = typeof input.currency === "string" ? input.currency.trim().toUpperCase() : "";
+  if (!currency || !settings.supported_currencies.map((c) => c.toUpperCase()).includes(currency)) {
+    errors.push("Currency not supported for this company");
+  }
+
+  const method = typeof input.method === "string" ? input.method.trim().toUpperCase() : "";
+  if (method !== "CARD" && method !== "BANK_TRANSFER") {
+    errors.push("Invalid payment method");
+  } else if (method === "CARD" && !settings.card_enabled) {
+    errors.push("Bank Card payments are not available");
+  } else if (method === "BANK_TRANSFER" && !settings.bank_transfer_enabled) {
+    errors.push("Bank Transfer payments are not available");
+  }
+
+  if (errors.length > 0) return { ok: false, errors };
+  return {
+    ok: true,
+    value: {
+      amount: Math.round(amount * 100) / 100,
+      currency,
+      method: method as DepositMethod,
+    },
+  };
+}
+
+export function resolveGatewayId(method: DepositMethod, settings: CompanyPaymentSettingsRecord): string | null {
+  return method === "CARD" ? settings.card_gateway_id : settings.bank_transfer_gateway_id;
+}

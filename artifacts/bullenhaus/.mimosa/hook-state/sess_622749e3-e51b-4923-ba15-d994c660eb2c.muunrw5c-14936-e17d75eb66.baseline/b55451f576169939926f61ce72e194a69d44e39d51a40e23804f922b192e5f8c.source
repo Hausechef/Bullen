@@ -1,0 +1,32 @@
+import { supabase } from './supabase';
+
+// Authenticated fetch for the Vercel API functions (api/**), mirroring the CRM
+// helper: Bearer access token, one automatic refresh on 401.
+export async function refreshAccessToken(): Promise<string | null> {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error || !data.session) return null;
+  return data.session.access_token;
+}
+
+export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+    Authorization: `Bearer ${token}`,
+  };
+
+  let res = await fetch(url, { ...options, headers });
+
+  if (res.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      res = await fetch(url, { ...options, headers: { ...headers, Authorization: `Bearer ${newToken}` } });
+    }
+  }
+
+  return res;
+}

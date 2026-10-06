@@ -8,6 +8,9 @@
   background: #090806;
 }
 
+/* Фон — заранее расширенное изображение (зеркальные размытые
+   продолжения по бокам уже вшиты в файл), поэтому cover заполняет
+   любой экран, не обрезая центральную композицию. */
 .portal-landing__background {
   position: absolute;
   inset: 0;
@@ -36,9 +39,12 @@
   align-self: end;
   justify-self: center;
   display: flex;
-  gap: clamp(1.2rem, 4vw, 4.5rem);
-  width: min(90vw, 780px);
-  padding: 0 1rem max(2.25rem, 7svh);
+  /* +3cm: карточки раздвинуты друг от друга, ширина увеличена,
+     чтобы они разъехались, а не сжались */
+  gap: calc(clamp(1.2rem, 4vw, 4.5rem) + 3cm);
+  width: calc(min(90vw, 780px) + 3cm);
+  /* +3cm: карточки подняты вверх от нижнего края */
+  padding: 0 1rem calc(max(2.25rem, 7svh) + 3cm);
   perspective: 1100px;
 }
 

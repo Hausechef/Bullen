@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, ArrowUpRight, ArrowDownLeft, RefreshCw } from 'lucide-react';
+import { Search, ArrowUpRight, ArrowDownLeft, RefreshCw, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { apiFetch } from '../../lib/api';
 import { PaymentDetailsDisplay } from '../../components/payment/PaymentDetailsDisplay';
 import type { PaymentDetails } from '../../components/admin/PaymentDetailsForm';
 
@@ -10,8 +11,19 @@ export const Transactions = () => {
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [rows, setRows] = useState<any[]>([]);
+  const [onlineDeposits, setOnlineDeposits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const loadOnlineDeposits = async () => {
+    try {
+      const res = await apiFetch('/api/deposits');
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(data.deposits)) setOnlineDeposits(data.deposits);
+    } catch {
+      // keep previous rows
+    }
+  };
 
   const loadTransactions = async () => {
     setLoading(true);
@@ -35,7 +47,8 @@ export const Transactions = () => {
 
   useEffect(() => {
     loadTransactions();
-    const iv = window.setInterval(loadTransactions, 8000);
+    loadOnlineDeposits();
+    const iv = window.setInterval(() => { loadTransactions(); loadOnlineDeposits(); }, 8000);
     return () => window.clearInterval(iv);
   }, []);
 
@@ -66,7 +79,7 @@ export const Transactions = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center mb-6">
           <div className="md:col-span-8 flex gap-2 bg-surface p-1 rounded-xl w-fit border border-border">
-            {['All', 'Deposits', 'Withdrawals'].map(f => (
+            {['All', 'Deposits', 'Withdrawals', 'Online'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -92,6 +105,60 @@ export const Transactions = () => {
           </div>
         </div>
 
+        {filter === 'Online' && (
+          <div className="glass-card overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border text-[10px] font-bold text-text-dim uppercase tracking-widest bg-surface/60">
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Method</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Reference</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm divide-y divide-border">
+                {onlineDeposits.length === 0 ? (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="flex flex-col items-center justify-center py-16 gap-3">
+                        <div className="w-12 h-12 rounded-full bg-surface border border-border flex items-center justify-center">
+                          <CreditCard size={20} className="text-text-dim" />
+                        </div>
+                        <p className="text-sm font-medium text-text-muted">
+                          {loading ? 'Loading...' : 'No online deposits yet'}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : onlineDeposits.map(d => (
+                  <tr key={d.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4 text-text-dim text-xs">{d.created_at ? new Date(d.created_at).toLocaleString() : '—'}</td>
+                    <td className="px-6 py-4 font-mono font-bold">
+                      <span className="text-success">
+                        +{Number(d.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-text-dim text-[10px] ml-1">{d.currency}</span>
+                    </td>
+                    <td className="px-6 py-4 text-text-muted text-xs">
+                      {d.method === 'CARD' ? 'Bank Card' : d.method === 'BANK_TRANSFER' ? 'Bank Transfer' : d.method}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-500' : d.status === 'FAILED' || d.status === 'CANCELLED' ? 'bg-rose-500/10 text-rose-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                        {d.status === 'PAID' ? 'Completed' : d.status === 'FAILED' ? 'Failed' : d.status === 'CANCELLED' ? 'Cancelled' : ['CREATED', 'PROVIDER_CREATE_PENDING', 'PENDING', 'PROCESSING'].includes(d.status) ? 'Pending' : d.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-mono text-gold/70" title={d.order_id}>
+                      {d.order_id?.replace(/^BH-DEP-/, '').slice(0, 8)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {filter !== 'Online' && (
         <div className="glass-card overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -187,6 +254,7 @@ export const Transactions = () => {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

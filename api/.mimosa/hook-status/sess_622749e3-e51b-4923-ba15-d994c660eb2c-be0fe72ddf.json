@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-10-05T02:23:55.472Z",
+  "sessionId": "sess_622749e3-e51b-4923-ba15-d994c660eb2c",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "D:\\Новая папка\\Bullenhaus-clean\\artifacts\\bullenhaus\\src\\app\\trading\\components\\admin\\AdminLayout.tsx",
+  "outcome": "inconclusive",
+  "coverage": "partial",
+  "findingCount": 0,
+  "durationMs": 9,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

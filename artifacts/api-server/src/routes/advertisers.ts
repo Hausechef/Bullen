@@ -4,7 +4,10 @@ import { createClient } from "@supabase/supabase-js";
 const router = Router();
 
 function getAdminClient() {
+  // SSRF-защита: базовый URL — только https на *.supabase.co (allowlist)
   const url = process.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"] || "";
+  if (url && !/^https:\/\/[\w-]+\.supabase\.co$/.test(url)) throw new Error("Supabase URL rejected by allowlist");
+  const adminCredentialsConfigured = Boolean(url);
   const key = process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
   if (!url || !key) throw new Error("Supabase admin credentials not configured");
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -115,6 +118,11 @@ router.patch("/:id", async (req, res) => {
     if (!callerId) return;
 
     const { id } = req.params as { id: string };
+    // Валидация id до обращения к БД
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      res.status(400).json({ error: "Invalid advertiser id" });
+      return;
+    }
     const { name, description, isActive } = req.body as {
       name?: string;
       description?: string;
@@ -122,9 +130,9 @@ router.patch("/:id", async (req, res) => {
     };
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (name !== undefined) updates["name"] = name.trim();
-    if (description !== undefined) updates["description"] = description.trim() || null;
-    if (isActive !== undefined) updates["is_active"] = isActive;
+    if (name !== undefined) updates["name"] = name.trim().slice(0, 200);
+    if (description !== undefined) updates["description"] = description.trim().slice(0, 2000) || null;
+    if (isActive !== undefined) updates["is_active"] = Boolean(isActive);
 
     const supabase = getAdminClient();
     const { data, error } = await supabase
@@ -235,6 +243,11 @@ router.post("/:id/codes", async (req, res) => {
     if (!callerId) return;
 
     const { id } = req.params as { id: string };
+    // Валидация id до обращения к БД
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      res.status(400).json({ error: "Invalid advertiser id" });
+      return;
+    }
     const { code, campaignName } = req.body as { code?: string; campaignName?: string };
 
     if (!code || code.trim().length < 3) {

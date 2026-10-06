@@ -1,0 +1,104 @@
+import type { PointerEvent, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import './PortalLanding.css';
+
+type PortalLinkProps = {
+  children: ReactNode;
+  href?: string;
+  to?: string;
+  variant: 'recovery' | 'trade';
+};
+
+function PortalLink({ children, href, to, variant }: PortalLinkProps) {
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType === 'touch') return;
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width;
+    const y = (event.clientY - bounds.top) / bounds.height;
+
+    event.currentTarget.style.setProperty('--tilt-x', `${(0.5 - y) * 12}deg`);
+    event.currentTarget.style.setProperty('--tilt-y', `${(x - 0.5) * 14}deg`);
+    event.currentTarget.style.setProperty('--light-x', `${x * 100}%`);
+    event.currentTarget.style.setProperty('--light-y', `${y * 100}%`);
+  };
+
+  const resetTilt = (event: PointerEvent<HTMLElement>) => {
+    event.currentTarget.style.setProperty('--tilt-x', '0deg');
+    event.currentTarget.style.setProperty('--tilt-y', '0deg');
+    event.currentTarget.style.setProperty('--light-x', '50%');
+    event.currentTarget.style.setProperty('--light-y', '0%');
+  };
+
+  const content = (
+    <>
+      <span className="portal-card__glass" aria-hidden="true" />
+      <span className="portal-card__label">
+        <span className="portal-card__brand">Bullenhaus</span>
+        <span className="portal-card__title">{children}</span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a
+        className={`portal-card portal-card--${variant}`}
+        href={href}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={resetTilt}
+        aria-label={`Open Bullenhaus ${children}`}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  if (!to) {
+    return (
+      <button
+        className={`portal-card portal-card--${variant}`}
+        type="button"
+        disabled
+        aria-label={`Bullenhaus ${children} — not connected yet`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      className={`portal-card portal-card--${variant}`}
+      to={to}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetTilt}
+      aria-label={`Open Bullenhaus ${children}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+export default function PortalLanding() {
+  const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
+  const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
+
+  return (
+    <main className="portal-landing">
+      <img
+        className="portal-landing__background"
+        src="/bullenhaus-gateway.jpg"
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+      />
+      <div className="portal-landing__atmosphere" aria-hidden="true" />
+
+      <nav className="portal-actions" aria-label="Choose a Bullenhaus platform">
+        <PortalLink href={recoveryProjectUrl} variant="recovery">Recovery</PortalLink>
+        <PortalLink to="/login" variant="trade">Trade</PortalLink>
+      </nav>
+    </main>
+  );
+}

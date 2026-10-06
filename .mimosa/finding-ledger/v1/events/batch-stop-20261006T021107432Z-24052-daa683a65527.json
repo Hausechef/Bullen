@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261006T021107432Z-24052-daa683a65527",
+  "runId": "20261006T021107432Z-24052-daa683a65527",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "diffHash": "557fb4eb916cceb0bcef9d0ebb5c18abe7aec9b785b365fdb0e2fd99774ffbeb",
+  "rulesVersion": "unavailable",
+  "sessionHash": "1f0098cc581d14d3a7a28c612fbafcca9807ae2230e3d5f8939ca92845cafcbb",
+  "reportRef": ".mimosa/reports/task-review-sess_a76257b4-a891-43e6-8ec3-1de36c05c063-20261006T021107432Z-24052-daa683a65527.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "artifacts/bullenhaus/src/App.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/components/guards/RoleGuard.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/app/crm/components/Layout.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "artifacts/bullenhaus/src/app/login/marketing/LoginDropdown.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-06T02:11:08.156Z"
+}

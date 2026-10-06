@@ -1,0 +1,288 @@
+import { getAdminClient } from "../../../_lib/supabase.js";
+import { requirePaymentAdmin, requirePaymentStaff } from "../../../_lib/payment-auth.js";
+import { buildWebhookUrl } from "../../../_lib/app-url.js";
+import { loadCompanyContext } from "../../../_lib/trapay/config.js";
+import { validateTrapayConfiguration } from "../../../_lib/trapay/validation.js";
+import { getEncryptionKeyFromEnv, encryptSecret } from "../../../_lib/secretbox.js";
+import type { CompanyPaymentSettingsRecord } from "../../../_lib/trapay/types.js";
+
+// Admin TRAPAY configuration for the current company.
+//
+// RBAC: GET (view) — admin/director/trade_admin/crm_admin; PATCH (change,
+// including credentials) — platform 'admin' role only. Secrets are write-only:
+// the stored secret is never returned to the browser, only a hasSecret flag.
+
+function maskSettings(s: CompanyPaymentSettingsRecord) {
+  return {
+    enabled: s.enabled,
+    environment: s.environment,
+    publicKey: s.public_key,
+    hasSecret: Boolean(s.secret_encrypted),
+    sandboxBaseUrl: s.sandbox_base_url,
+    productionBaseUrl: s.production_base_url,
+    cardEnabled: s.card_enabled,
+    bankTransferEnabled: s.bank_transfer_enabled,
+    cardGatewayId: s.card_gateway_id,
+    bankTransferGatewayId: s.bank_transfer_gateway_id,
+    defaultCurrency: s.default_currency,
+    supportedCurrencies: s.supported_currencies,
+    minimumDeposit: Number(s.minimum_deposit),
+    maximumDeposit: Number(s.maximum_deposit),
+    webhookConfigured: s.webhook_configured,
+    updatedAt: s.updated_at,
+  };
+}
+
+async function ensureSettingsRow(supabase: any, companyId: string): Promise<CompanyPaymentSettingsRecord> {
+  const { data: existing } = await supabase
+    .from("company_payment_settings")
+    .select("*")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (existing) return existing as CompanyPaymentSettingsRecord;
+  const { data: created } = await supabase
+    .from("company_payment_settings")
+    .insert({ company_id: companyId })
+    .select("*")
+    .single();
+  return created as CompanyPaymentSettingsRecord;
+}
+
+async function loadObservability(supabase: any) {
+  const [{ data: lastEvent }, { data: lastPaid }, { count: failed24h }] = await Promise.all([
+    supabase.from("trapay_events").select("received_at").order("received_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("deposits").select("paid_at").not("paid_at", "is", null).order("paid_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase
+      .from("deposits")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "FAILED")
+      .gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString()),
+  ]);
+  return {
+    lastWebhookAt: lastEvent?.received_at ?? null,
+    lastSuccessfulPaymentAt: lastPaid?.paid_at ?? null,
+    failedPayments24h: failed24h ?? 0,
+  };
+}
+
+export default async function handler(req: any, res: any) {
+  if (req.method === "GET") {
+    if (!(await requirePaymentStaff(req, res))) return;
+    const supabase = getAdminClient();
+    const context = await loadCompanyContext(supabase);
+    if (!context) {
+      res.status(500).json({ error: "Company configuration is missing" });
+      return;
+    }
+    const settings = await ensureSettingsRow(supabase, context.company.id);
+    // APP_URL is the single source for the webhook URL; when it is not
+    // configured we surface null instead of a header-derived guess.
+    let webhookUrl: string | null;
+    try {
+      webhookUrl = buildWebhookUrl();
+    } catch {
+      webhookUrl = null;
+    }
+    res.json({
+      company: context.company,
+      settings: maskSettings(settings),
+      webhookUrl,
+      validation: {
+        current: validateTrapayConfiguration(settings, settings.environment),
+        production: validateTrapayConfiguration(settings, "PRODUCTION"),
+      },
+      observability: await loadObservability(supabase),
+    });
+    return;
+  }
+
+  if (req.method === "PATCH") {
+    const caller = await requirePaymentAdmin(req, res);
+    if (!caller) return;
+    const supabase = getAdminClient();
+    const context = await loadCompanyContext(supabase);
+    if (!context) {
+      res.status(500).json({ error: "Company configuration is missing" });
+      return;
+    }
+    const current = await ensureSettingsRow(supabase, context.company.id);
+    const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+
+    // Merge whitelisted fields over the current row.
+    const next: any = { ...current };
+    const changes: { field: string; action: string; from: unknown; to: unknown }[] = [];
+    const note = (field: string, action: string, from: unknown, to: unknown) => changes.push({ field, action, from, to });
+
+    if (typeof body.enabled === "boolean" && body.enabled !== current.enabled) {
+      next.enabled = body.enabled;
+      note("enabled", body.enabled ? "TRAPAY_ENABLED" : "TRAPAY_DISABLED", current.enabled, body.enabled);
+    }
+    if ((body.environment === "SANDBOX" || body.environment === "PRODUCTION") && body.environment !== current.environment) {
+      next.environment = body.environment;
+      note("environment", "TRAPAY_ENVIRONMENT_CHANGED", current.environment, body.environment);
+    }
+    if (typeof body.publicKey === "string") {
+      const v = body.publicKey.trim();
+      if (v !== (current.public_key ?? "")) {
+        next.public_key = v.length > 0 ? v : null;
+        note("public_key", "TRAPAY_PUBLIC_KEY_UPDATED", Boolean(current.public_key), v.length > 0);
+      }
+    }
+    if (typeof body.secret === "string" && body.secret.trim().length > 0) {
+      const key = getEncryptionKeyFromEnv();
+      if (!key) {
+        res.status(503).json({ error: "TRAPAY_SECRET_ENC_KEY is not configured on the server; the secret cannot be stored" });
+        return;
+      }
+      next.secret_encrypted = encryptSecret(body.secret.trim(), key);
+      note("secret", "TRAPAY_SECRET_REPLACED", Boolean(current.secret_encrypted), true);
+    }
+    for (const [field, column] of [
+      ["sandboxBaseUrl", "sandbox_base_url"],
+      ["productionBaseUrl", "production_base_url"],
+      ["cardGatewayId", "card_gateway_id"],
+      ["bankTransferGatewayId", "bank_transfer_gateway_id"],
+    ] as const) {
+      if (typeof body[field] === "string") {
+        const v = body[field].trim();
+        if (v !== (current[column] ?? "")) {
+          next[column] = v.length > 0 ? v : null;
+          note(column, `TRAPAY_${column.toUpperCase()}_UPDATED`, current[column] ?? null, next[column]);
+        }
+      }
+    }
+    if (typeof body.cardEnabled === "boolean" && body.cardEnabled !== current.card_enabled) {
+      next.card_enabled = body.cardEnabled;
+      note("card_enabled", body.cardEnabled ? "TRAPAY_CARD_ENABLED" : "TRAPAY_CARD_DISABLED", current.card_enabled, body.cardEnabled);
+    }
+    if (typeof body.bankTransferEnabled === "boolean" && body.bankTransferEnabled !== current.bank_transfer_enabled) {
+      next.bank_transfer_enabled = body.bankTransferEnabled;
+      note("bank_transfer_enabled", body.bankTransferEnabled ? "TRAPAY_BANK_TRANSFER_ENABLED" : "TRAPAY_BANK_TRANSFER_DISABLED", current.bank_transfer_enabled, body.bankTransferEnabled);
+    }
+    if (typeof body.webhookConfigured === "boolean" && body.webhookConfigured !== current.webhook_configured) {
+      next.webhook_configured = body.webhookConfigured;
+      note("webhook_configured", body.webhookConfigured ? "TRAPAY_WEBHOOK_MARKED_CONFIGURED" : "TRAPAY_WEBHOOK_MARKED_NOT_CONFIGURED", current.webhook_configured, body.webhookConfigured);
+    }
+    if (body.supportedCurrencies !== undefined) {
+      if (!Array.isArray(body.supportedCurrencies)) {
+        res.status(400).json({ error: "supportedCurrencies must be an array" });
+        return;
+      }
+      const currencies = Array.from(
+        new Set(
+          body.supportedCurrencies
+            .filter((c: unknown) => typeof c === "string" && /^[A-Za-z]{3}$/.test(c))
+            .map((c: string) => c.toUpperCase()),
+        ),
+      ).slice(0, 10) as string[];
+      if (JSON.stringify(currencies) !== JSON.stringify(current.supported_currencies)) {
+        next.supported_currencies = currencies;
+        note("supported_currencies", "TRAPAY_CURRENCIES_UPDATED", current.supported_currencies, currencies);
+      }
+    }
+    if (body.defaultCurrency !== undefined) {
+      const v = String(body.defaultCurrency).trim().toUpperCase();
+      if (!/^[A-Z]{3}$/.test(v)) {
+        res.status(400).json({ error: "defaultCurrency must be a 3-letter code" });
+        return;
+      }
+      if (v !== current.default_currency) {
+        next.default_currency = v;
+        note("default_currency", "TRAPAY_DEFAULT_CURRENCY_UPDATED", current.default_currency, v);
+      }
+    }
+    for (const [field, column] of [
+      ["minimumDeposit", "minimum_deposit"],
+      ["maximumDeposit", "maximum_deposit"],
+    ] as const) {
+      if (body[field] !== undefined) {
+        const v = Number(body[field]);
+        if (!Number.isFinite(v) || v <= 0) {
+          res.status(400).json({ error: `${field} must be a positive number` });
+          return;
+        }
+        if (v !== Number(current[column])) {
+          next[column] = Math.round(v * 100) / 100;
+          note(column, `TRAPAY_${column.toUpperCase()}_UPDATED`, Number(current[column]), next[column]);
+        }
+      }
+    }
+
+    const nextSettings = next as CompanyPaymentSettingsRecord;
+    if (nextSettings.supported_currencies.length === 0) {
+      res.status(422).json({ error: "At least one supported currency is required", errors: ["No supported currencies configured"] });
+      return;
+    }
+    if (!nextSettings.supported_currencies.includes(nextSettings.default_currency)) {
+      res.status(422).json({ error: "Default currency must be included in supported currencies" });
+      return;
+    }
+    if (Number(nextSettings.minimum_deposit) > Number(nextSettings.maximum_deposit)) {
+      res.status(422).json({ error: "Minimum deposit cannot exceed maximum deposit" });
+      return;
+    }
+
+    // Activation guards: enabling TRAPAY or switching to PRODUCTION requires a
+    // valid configuration. Production stays blocked while the webhook
+    // verification specification is unknown (TRAPAY_DOCUMENTATION_REQUIRED).
+    if (nextSettings.enabled) {
+      const check = validateTrapayConfiguration(nextSettings, nextSettings.environment);
+      if (!check.ok) {
+        res.status(422).json({ error: "Configuration validation failed", errors: check.errors });
+        return;
+      }
+    }
+    if (nextSettings.environment === "PRODUCTION") {
+      const productionCheck = validateTrapayConfiguration(nextSettings, "PRODUCTION");
+      if (!productionCheck.ok) {
+        res.status(422).json({ error: "Production activation is blocked", errors: productionCheck.errors });
+        return;
+      }
+    }
+
+    const { error: updateError } = await supabase
+      .from("company_payment_settings")
+      .update({
+        enabled: nextSettings.enabled,
+        environment: nextSettings.environment,
+        public_key: nextSettings.public_key,
+        secret_encrypted: nextSettings.secret_encrypted,
+        sandbox_base_url: nextSettings.sandbox_base_url,
+        production_base_url: nextSettings.production_base_url,
+        card_enabled: nextSettings.card_enabled,
+        bank_transfer_enabled: nextSettings.bank_transfer_enabled,
+        card_gateway_id: nextSettings.card_gateway_id,
+        bank_transfer_gateway_id: nextSettings.bank_transfer_gateway_id,
+        default_currency: nextSettings.default_currency,
+        supported_currencies: nextSettings.supported_currencies,
+        minimum_deposit: nextSettings.minimum_deposit,
+        maximum_deposit: nextSettings.maximum_deposit,
+        webhook_configured: nextSettings.webhook_configured,
+        updated_by: caller.id,
+      })
+      .eq("company_id", context.company.id);
+
+    if (updateError) {
+      res.status(500).json({ error: "Failed to save settings" });
+      return;
+    }
+
+    if (changes.length > 0) {
+      await supabase.from("company_payment_audit").insert(
+        changes.map((c) => ({
+          company_id: context.company.id,
+          admin_id: caller.id,
+          action: c.action,
+          field_name: c.field,
+          // Sanitized: secret values are never written to the audit log.
+          details: { from: c.from ?? null, to: c.to ?? null },
+        })),
+      );
+    }
+
+    res.json({ ok: true, settings: maskSettings(nextSettings) });
+    return;
+  }
+
+  res.status(405).json({ error: "Method not allowed" });
+}

@@ -3,9 +3,7 @@
 ## 1. Executive Summary
 
 Bullenhaus is a live trading platform (margin/forex/spot + a staff CRM backoffice) built on
-React/Vite + Supabase, deployed on Vercel. This audit covered the currently open PR #26
 (`claude/kyc-workflow-72v84z`) and the production database it depends on. It found and fixed two
-genuine **P0** issues — a Vercel build failure blocking deployment, and row-level security
 disabled on 7 production tables that had policies defined but never activated — plus one **P1**
 IDOR in support-ticket comments, and three lower-severity hardening items. It also surfaced and
 honestly documented several structural gaps (no test suite, no lint, no CI, no local migration
@@ -52,7 +50,6 @@ safely are fixed and re-verified; nothing confirmed-and-fixable was left open.
 | DB security (WARN-level, other) | Supabase advisor, full function-body review | ~19 remain, all individually investigated | Documented, no action needed or owner-action |
 | Secrets in repo | `git log --all` + pattern grep | 0 found | PASS |
 | Server-side authz | Full read of every privileged route/RPC | See 08_security_data_integrity.md | PASS (of what was read) |
-| Live deploy | Vercel bot PR comments on both fix commits | "Ready" x2 | PASS (external confirmation) |
 | Live browser/HTTP | curl + WebFetch attempts | 403 from egress proxy, 3-host control test | NOT_AVAILABLE |
 | Mobile responsiveness | — | — | NOT_RUN (no render access) |
 | Lint | — | No config exists | NOT_AVAILABLE |
@@ -63,7 +60,6 @@ safely are fixed and re-verified; nothing confirmed-and-fixable was left open.
 
 | ID | Problem | Fix | Verification | Status |
 |---|---|---|---|---|
-| AUDIT-001 | Vercel TS build failure, `api/kyc/analyze-external.ts` | Added `"dom"` to `api/tsconfig.json` `lib` | Local `tsc` clean; Vercel "Ready" | fixed |
 | AUDIT-002 | RLS disabled on 7 policy-bearing tables (P0) | `ENABLE ROW LEVEL SECURITY` x7 | Advisor 7→0 ERROR | fixed |
 | AUDIT-003 | `ticket_comments` IDOR (P1) | Rewrote read/insert policies with ticket-ownership check | Policy re-read post-fix | fixed |
 | AUDIT-004 | Public bucket listing on `premarket_contracts` | Restricted SELECT policy to admin roles | Advisor cleared; live HTTP re-check NOT_AVAILABLE | fixed, verification gap disclosed |
@@ -89,8 +85,6 @@ safely are fixed and re-verified; nothing confirmed-and-fixable was left open.
 
 | Path | Purpose | Type | Related Finding | Verification |
 |---|---|---|---|---|
-| `api/tsconfig.json` | Fix Vercel remote TS build failure | 1-line lib addition | AUDIT-001 | `tsc --noEmit` clean, Vercel "Ready" |
-| `.gitignore` | Prevent future `.env` commits | additive | AUDIT-008 | `git status` clean, Vercel "Ready" |
 | `final_audit/*.md` | This audit's deliverables | new files | — | this document |
 | (production DB) 7x `ENABLE ROW LEVEL SECURITY` | Close data exposure | DDL | AUDIT-002 | advisor re-run |
 | (production DB) `ticket_comments` policies | Close IDOR | DDL | AUDIT-003 | policy re-read |
@@ -108,7 +102,6 @@ clean before/after each commit.
 
 See `10_handover_runbook.md` for the full run/build/migrate/deploy/rollback instructions, required
 env var names, and known limitations. Summary: `pnpm install && pnpm --filter @workspace/bullenhaus
-run dev` to run locally; `pnpm run build` to build; deploy is automatic via Vercel on push/merge;
 no manual migration or deploy step exists.
 
 ## 9. Honest Limitations
@@ -141,7 +134,6 @@ OPEN P0: 0
 OPEN P1: 0
 BLOCKING P2: 0
 BROWSER VERIFICATION: NOT_AVAILABLE (DB-layer authorization empirically substituted via SQL role impersonation — see Loop 2)
-DEPLOYMENT VERIFICATION: PARTIAL (build+deploy confirmed via Vercel; live smoke test NOT_AVAILABLE)
 HANDOVER PACKAGE: COMPLETE
 
 ---
@@ -162,7 +154,6 @@ per-finding table. Summary of what changed after the first sign-off:
 - **ESLint added** (correctness-focused): 0 errors, 106 advisory warnings; wired into CI.
 - **Migrations backfilled into git** (this session's 3 security migrations) + workflow README.
 - **Docs**: `replit.md` filled with real content.
-- **`.vercelignore`** so `*.test.ts` isn't deployed as a serverless function.
 
 Remaining hard caps (genuinely cannot be closed from this sandbox):
 - Live browser/mobile rendering verification — no outbound network to the deployed app.

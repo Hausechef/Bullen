@@ -1,9 +1,10 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Mail, Lock, AlertCircle, X, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../trading/lib/supabase';
 import { UnifiedRole, useAuth } from '../../trading/contexts/AuthContext';
+import { getSafeNextPath } from '../../../lib/auth/redirect';
 
 interface LoginPanelProps {
   open: boolean;
@@ -27,6 +28,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { signInMockAdmin, signInMockClient, signInMockAgent } = useAuth();
   const emailRef = useRef<HTMLInputElement>(null);
   const panelId = useId();
@@ -49,33 +51,43 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
     setLoading(true);
     setError(null);
     try {
+      const requestedTarget = getSafeNextPath(location.search);
+
       // Dev/demo shortcut — identical to the original LoginPage behaviour.
       if (import.meta.env.DEV && import.meta.env.VITE_SUPABASE_URL?.includes('dummy')) {
         await new Promise((r) => setTimeout(r, 500));
-        if (email.includes('admin')) { signInMockAdmin(email); navigate('/admin/dashboard', { replace: true }); }
-        else if (email.includes('agent') || email.includes('manager') || email.includes('director')) { signInMockAgent(email); navigate('/crm/dashboard', { replace: true }); }
-        else { signInMockClient(email); navigate('/trade/dashboard', { replace: true }); }
+        if (email.includes('admin')) { signInMockAdmin(email); navigate(requestedTarget || '/admin/dashboard', { replace: true }); }
+        else if (email.includes('agent') || email.includes('manager') || email.includes('director')) { signInMockAgent(email); navigate(requestedTarget || '/crm/dashboard', { replace: true }); }
+        else { signInMockClient(email); navigate(requestedTarget || '/trade/dashboard', { replace: true }); }
         return;
       }
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
 
-      let target = '/trade/dashboard';
+      let role: UnifiedRole = 'client';
       const userId = data.user?.id;
       if (userId) {
         const { data: profile } = await supabase.from('users').select('role').eq('id', userId).single();
-        let role = (profile?.role || null) as UnifiedRole;
-        if (!role) {
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          const metaRole = authUser?.user_metadata?.role as string | undefined;
-          role = (metaRole && ['client', 'agent', 'manager', 'director', 'admin', 'trade_admin', 'crm_admin'].includes(metaRole))
-            ? (metaRole as UnifiedRole) : 'client';
-        }
-        if (role === 'admin' || role === 'trade_admin') target = '/admin/dashboard';
-        else if (role === 'agent' || role === 'manager' || role === 'director' || role === 'crm_admin') target = '/crm/dashboard';
+        // public.users is the only client-visible role source. user_metadata is
+        // intentionally excluded because account holders may edit it themselves.
+        role = (profile?.role || 'client') as UnifiedRole;
       }
-      navigate(target, { replace: true });
+
+      let dashboard = '/trade/dashboard';
+      if (role === 'admin' || role === 'trade_admin') dashboard = '/admin/dashboard';
+      else if (role === 'director' || role === 'crm_admin') dashboard = '/crm/dashboard';
+      else if (role === 'manager') dashboard = '/crm/manager';
+      else if (role === 'agent') dashboard = '/crm/workspace';
+
+      // next учитываем только когда роль допущена в запрошенный раздел;
+      // CRM-сотрудников после входа всегда ведём в их корневой раздел —
+      // иначе next=/trade приводит их в закрытую зону (403).
+      const isStaff = role === 'agent' || role === 'manager' || role === 'director' || role === 'crm_admin';
+      const finalTarget = isStaff || !requestedTarget || requestedTarget.startsWith('/crm')
+        ? dashboard
+        : requestedTarget;
+      navigate(finalTarget, { replace: true });
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) setError('Account pending activation. Please contact support to verify your account.');

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261005T023213491Z-7624-d4d58c13bdef",
+  "runId": "20261005T023213491Z-7624-d4d58c13bdef",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": [
+      {
+        "code": "baseline_partial",
+        "stage": "baseline",
+        "target": ".",
+        "detail": "baseline capture had enumeration or snapshot errors",
+        "affectsCompletion": false
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "a8b83b98830aa1c1ac6aec94b219559acd58b418",
+  "diffHash": "e4048606177c154af3558097e0d1a3eebb10f870459c5faff351eaab4e4b6ec8",
+  "rulesVersion": "unavailable",
+  "sessionHash": "be0fe72ddffd33abee3a44f8f40614970e18500e34337ef137d8837ed63d58b5",
+  "reportRef": ".mimosa/reports/task-review-sess_622749e3-e51b-4923-ba15-d994c660eb2c-20261005T023213491Z-7624-d4d58c13bdef.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "api/_lib/secretbox.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/ratelimit.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/http.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/trapay/types.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/trapay/status-map.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/trapay/validation.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/trapay/client.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/trapay/config.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/_lib/payment-auth.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/deposits/index.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/deposits/config.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/deposits/[id].ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/webhooks/trapay.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/admin/payments/trapay/index.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/admin/payments/trapay/test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "api/admin/deposits/[id].ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-05T02:32:14.179Z"
+}

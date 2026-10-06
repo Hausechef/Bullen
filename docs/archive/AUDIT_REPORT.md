@@ -14,7 +14,6 @@
 |-------|-----------|
 | **Monorepo** | pnpm workspaces (10 packages) |
 | **Frontend** | Vite 7 + React 19 + TypeScript 5.9 |
-| **Backend #1** | Vercel serverless (`api/`) — file-based routing |
 | **Backend #2** | Express (`artifacts/api-server/`) — DUPLICATE, not deployed |
 | **Backend #3** | Supabase Edge Functions (Deno) — 5 functions |
 | **Database** | Supabase Postgres (project `sgtmwdlycllbbavrqgzm`) |
@@ -27,7 +26,6 @@
 | **Realtime** | socket.io-client v4.8 (client-side only) |
 | **i18n** | react-i18next (EN/DE) |
 | **Forms** | react-hook-form + zod |
-| **Deployment** | Vercel (frontend) + Supabase (backend/DB) |
 | **Package Manager** | pnpm v11.9 (via corepack) |
 | **Node** | v24 |
 
@@ -35,14 +33,12 @@
 
 ```
 Bullenhaus/
-├── api/                          Vercel serverless functions (DEPLOYED)
 │   ├── _lib/supabase.ts          ⚠️ Has duplicate exports (bug)
 │   ├── ai/{chat,status}.ts       OpenRouter proxy
 │   ├── crm/workers/              CRM worker CRUD
 │   ├── crm/clients/[id]/files/   Client file upload
 │   └── v1/advertisers/           Advertiser CRUD
 ├── artifacts/
-│   ├── bullenhaus/               MAIN FRONTEND (deployed to Vercel)
 │   │   ├── src/
 │   │   │   ├── app/trading/      Client trading zone
 │   │   │   ├── app/crm/          CRM worker zone
@@ -77,7 +73,6 @@ Bullenhaus/
 - `artifacts/bullenhaus/src/main.tsx` → `App.tsx`
 - `artifacts/bullenhaus/index.html`
 
-**Backend (Vercel):**
 - `api/healthz.ts`, `api/ai/{chat,status}.ts`
 - `api/crm/workers/{index,[id],[id]/reset-password}.ts`
 - `api/crm/clients/[id]/files/index.ts`
@@ -121,7 +116,6 @@ Root: `pnpm install`, `pnpm --filter <pkg> <cmd>`
 4. **Supabase project_id mismatch** — `config.toml` says `jwdnjrysxrzgtqbvpuxq`, linked-project says `sgtmwdlycllbbavrqgzm`
 
 ### Architecture Issues
-5. **Triple backend duplication** — `api/` (Vercel) + `artifacts/api-server/` (Express) + `supabase/functions/crm-workers/` all implement CRM worker CRUD
 6. **Empty Drizzle schema** — `lib/db/src/schema/index.ts` is 19 lines, no models; SQL migrations are sole source of truth
 7. **16 inject_*.cjs + 4 fix_*.cjs scripts** — Build hack scripts in bullenhaus root, unclear if still needed
 
@@ -188,7 +182,6 @@ Root: `pnpm install`, `pnpm --filter <pkg> <cmd>`
 5. Fix `api/_lib/supabase.ts` duplicate exports
 
 ### Phase B — Architecture decision (medium risk)
-6. Decide: keep Vercel `api/` OR Express `api-server/` — delete the other
 7. Decide: keep `mockup-sandbox` or remove
 8. Decide: keep Drizzle `lib/db/` (empty) or remove
 9. Fix `config.toml` project_id to `sgtmwdlycllbbavrqgzm`

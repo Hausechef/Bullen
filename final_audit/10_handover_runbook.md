@@ -23,8 +23,6 @@ cd api && npx tsc --noEmit -p tsconfig.json   # api/ is not covered by the root 
 pnpm run build             # typecheck + build everything with an --if-present build script
 ```
 
-Vercel's actual production build only runs `pnpm --filter @workspace/bullenhaus run build`
-(per `vercel.json`); `api/**` is compiled/deployed separately by Vercel's own Node function
 builder. Always sanity-check `api/` with its own `tsc --noEmit` before assuming a green root
 build means `api/` is fine too — this exact gap caused AUDIT-001 this session.
 
@@ -38,13 +36,10 @@ resulting file to `supabase/migrations/` so changes become reviewable and revert
 
 ## Deploy
 
-Automatic: push to any branch → Vercel preview deploy; merge to `main` → Vercel production
 deploy. No manual deploy step exists or is needed. Do not deploy from a local machine using the
-Vercel CLI unless intentionally bypassing the GitHub integration.
 
 ## Rollback
 
-- **Code:** standard `git revert <commit>` + push; Vercel redeploys automatically.
 - **Database:** no automated rollback exists (see 09_deployment_readiness.md for the specific
   manual-revert SQL for this session's changes if ever needed). Because there's no branch/staging
   DB, any future schema change should be tested with extreme care — consider standing up a
@@ -67,7 +62,6 @@ Vercel CLI unless intentionally bypassing the GitHub integration.
 
 **NOT_DETERMINED this session** — no observability/logging platform integration was found in the
 reviewed code beyond `console.error` calls in the `api/**` serverless functions (visible in
-Vercel's own function logs by platform default). If a dedicated logging service (Sentry, Logtail,
 etc.) is in use, it wasn't referenced by any file this audit read.
 
 ## Known non-blocking limitations (carried into handover)

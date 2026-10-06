@@ -77,7 +77,6 @@ concrete client-data exposure in production — not hypothetical risk.
 - **NOT_AUDITED this session** — no code path implementing rate limiting, CORS configuration, or
   security headers was encountered in the files actually read (the reviewed `api/**` routes have
   no CORS/rate-limit middleware visible in their own file bodies; whether this is handled by
-  Vercel platform defaults, `api/_lib/supabase.ts`, or not at all was not determined). Marked
   **UNKNOWN**, not asserted safe.
 
 ## AI / prompt injection surface
