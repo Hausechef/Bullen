@@ -1,3 +1,4 @@
+import { loginText } from './loginLanguage';
 import React from 'react';
 import { TrendingUp, TrendingDown, Bitcoin, DollarSign, Gem, Loader2, WifiOff } from 'lucide-react';
 import type { Quote, FeedMode } from './useMarketPreview';
@@ -16,7 +17,7 @@ const FeedBadge: React.FC<{ mode: FeedMode }> = ({ mode }) => (
         : 'border-warning/30 bg-warning-soft text-warning'}`}
   >
     <span className={`h-1 w-1 rounded-full ${mode === 'live' ? 'bg-success' : 'bg-warning'}`} />
-    {mode === 'live' ? 'Live' : 'Demo'}
+    {mode === 'live' ? loginText("Live") : loginText("Demo")}
   </span>
 );
 
@@ -37,7 +38,7 @@ const Row: React.FC<{ q: Quote; unit?: string }> = ({ q, unit = '$' }) => {
             {q.symbol.slice(0, 3)}
           </span>
         )}
-        <span className="truncate font-mono text-xs font-semibold text-text">{q.label}</span>
+        <span className="truncate font-mono text-xs font-semibold text-text">{loginText(q.label)}</span>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="font-mono text-xs text-text tabular-nums">{unit}{fmt(q.price)}</span>
@@ -66,7 +67,7 @@ const MarketWidget: React.FC<WidgetProps> = ({ title, icon, quotes, mode, unit, 
     <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span className="text-gold">{icon}</span>
-        <h3 className="font-serif text-base font-semibold text-text">{title}</h3>
+        <h3 className="font-serif text-base font-semibold text-text">{loginText(title)}</h3>
       </div>
       <FeedBadge mode={mode} />
     </div>
@@ -78,7 +79,7 @@ const MarketWidget: React.FC<WidgetProps> = ({ title, icon, quotes, mode, unit, 
     ) : quotes.length === 0 ? (
       <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-text-muted">
         <WifiOff size={18} />
-        <p className="text-xs">{error ?? 'No market data available.'}</p>
+        <p className="text-xs">{loginText(error ?? 'No market data available.')}</p>
       </div>
     ) : (
       <ul className="divide-y divide-border">
@@ -86,7 +87,7 @@ const MarketWidget: React.FC<WidgetProps> = ({ title, icon, quotes, mode, unit, 
       </ul>
     )}
 
-    {note && <p className="mt-3 text-[10px] leading-relaxed text-text-dim">{note}</p>}
+    {note && <p className="mt-3 text-[10px] leading-relaxed text-text-dim">{loginText(note)}</p>}
   </GlassCard3D>
 );
 
@@ -106,32 +107,32 @@ export const MarketWidgets: React.FC<MarketWidgetsProps> = ({
 }) => (
   <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
     <MarketWidget
-      title="Cryptocurrencies"
+      title={loginText("Cryptocurrencies")}
       icon={<Bitcoin size={18} />}
       quotes={crypto}
       mode={cryptoMode}
       loading={loading}
       error={error}
-      note={cryptoMode === 'live' ? 'Live last price & 24h change via public exchange feed.' : undefined}
+      note={cryptoMode === 'live' ? loginText("Live last price & 24h change via public exchange feed.") : undefined}
     />
     <MarketWidget
-      title="Forex"
+      title={loginText("Forex")}
       icon={<DollarSign size={18} />}
       quotes={forex}
       mode={forexMode}
       unit=""
       loading={loading}
       error={error}
-      note="Reference rates are live; intraday change % is indicative (simulated)."
+      note={loginText("Reference rates are live; intraday change % is indicative (simulated).")}
     />
     <MarketWidget
-      title="Metals"
+      title={loginText("Metals")}
       icon={<Gem size={18} />}
       quotes={metals}
       mode={metalsMode}
       loading={loading}
       error={error}
-      note="Demo prices — a metals feed is not yet connected."
+      note={loginText("Demo prices — a metals feed is not yet connected.")}
     />
   </div>
 );

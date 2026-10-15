@@ -2,7 +2,6 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../../../lib/supabase/browserClient";
 import {
-  Building2,
   LayoutDashboard,
   Users,
   PhoneCall,
@@ -11,11 +10,9 @@ import {
   Settings,
   ShieldCheck,
   TrendingUp,
-  FileText,
   LogOut,
   Menu,
   X,
-  BellRing,
   Megaphone,
   Database,
   Shield,
@@ -264,18 +261,20 @@ export function Layout({ children, role, onLogout }: { children: ReactNode, role
       </div>
 
       <div className="p-4 border-t border-white/5 glass-card shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded overflow-hidden flex items-center justify-center border border-aura-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.2)] glass-card p-1">
-            <img src="/assets/icons/role_badge.png" alt="Role Badge" className="w-full h-full object-contain filter brightness-110 drop-shadow-[0_0_4px_rgba(212,175,55,0.6)]" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded overflow-hidden flex items-center justify-center border border-aura-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.2)] glass-card p-1">
+              <img src="/assets/icons/role_badge.png" alt="Role Badge" className="w-full h-full object-contain filter brightness-110 drop-shadow-[0_0_4px_rgba(212,175,55,0.6)]" />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold tracking-wider uppercase">{role}</div>
+              <div className="text-[9px] uppercase tracking-widest text-aura-gold">{t('auraAccount')}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-[11px] font-bold tracking-wider uppercase">{role}</div>
-            <div className="text-[9px] uppercase tracking-widest text-aura-gold">{t('auraAccount')}</div>
-          </div>
+          <button onClick={onLogout} className="p-2 text-aura-platinum/30 hover:text-aura-ruby transition-colors relative group">
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
-        <button onClick={onLogout} className="p-2 text-aura-platinum/30 hover:text-aura-ruby transition-colors relative group">
-          <LogOut className="w-4 h-4" />
-        </button>
       </div>
     </>
   );

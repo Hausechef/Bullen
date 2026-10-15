@@ -1,5 +1,4 @@
 import { useState, useMemo, memo } from 'react';
-import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
@@ -7,11 +6,12 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Search, Filter, RefreshCw, GripVertical, Phone, Mail, Loader2, X } from 'lucide-react';
+import { Search, RefreshCw, GripVertical, Loader2 } from 'lucide-react';
 import { useKanban, KANBAN_STAGES, type KanbanStage } from '../hooks/useKanban';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../../../lib/supabase/browserClient';
+import { CallButton } from '../../../telephony/CallButton';
 
 // ---------------------------------------------------------------------------
 // Sortable Lead Card
@@ -49,14 +49,16 @@ const SortableLeadCard = memo(function SortableLeadCard({ lead, isMoving }: { le
           <span className="text-[9px] text-aura-platinum/40 uppercase tracking-wider">{lead.country}</span>
         )}
         {lead.phone && (
-          <a
-            href={`tel:${lead.phone}`}
-            onClick={(e) => e.stopPropagation()}
-            className="ml-auto p-1 rounded text-aura-platinum/40 hover:text-gold"
-            title={lead.phone}
+          <div
+            className="ml-auto"
+            onPointerDown={(event) => event.stopPropagation()}
           >
-            <Phone size={10} />
-          </a>
+            <CallButton
+              phone={lead.phone}
+              name={name}
+              size="sm"
+            />
+          </div>
         )}
       </div>
     </div>

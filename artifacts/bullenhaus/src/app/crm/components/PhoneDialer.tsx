@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, PhoneOff, PhoneMissed, X, Minimize2, Maximize2, Delete, Clock, User, Sparkles, Loader2, AlertTriangle, Copy, CheckCheck, Bot, Send, LogOut, CheckCircle2 } from "lucide-react";
+import { Phone, PhoneOff, PhoneMissed, X, Minimize2, Maximize2, Delete, Clock, User, Sparkles, Loader2, AlertTriangle, Copy, ClipboardPaste, CheckCheck, Bot, Send, LogOut, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase/browserClient";
-import { logCall, updateCallLog } from "../hooks/useCallLogs";
+import { useTelephony } from "../../../telephony/callStore";
+import { normalizeGermanNumber, formatPhoneNumber } from "../../../telephony/normalize";
+import { PhoneScriptPicker } from './PhoneScriptPicker';
+import { PhoneAudioNotice } from '../../../telephony/PhoneAudioNotice';
 import { generateCallBrief, CALL_GOALS, type CallGoal, type CallBrief } from "../lib/callCopilot";
 import {
   generateNextScenarioStep, createScenarioSession, appendScenarioTurns, closeScenarioSession,
@@ -10,7 +13,7 @@ import {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type CallState = 'idle' | 'dialing' | 'ringing' | 'active' | 'ended';
+type CallState = 'idle' | 'dialing' | 'ringing' | 'active' | 'ending' | 'ended';
 
 interface RecentCall {
   id: string;
@@ -30,11 +33,7 @@ function fmtDuration(secs: number) {
 }
 
 function fmtPhone(raw: string) {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  return `+${digits.slice(0, digits.length - 10)} (${digits.slice(-10, -7)}) ${digits.slice(-7, -4)}-${digits.slice(-4)}`;
+  return formatPhoneNumber(raw);
 }
 
 const DIALPAD = [
@@ -74,7 +73,7 @@ interface PhoneDialerProps {
 export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
   const [open, setOpen]           = useState(false);
   const [minimized, setMinimized] = useState(false);
-  const [tab, setTab]             = useState<'dialpad' | 'recent' | 'copilot' | 'scenario'>('dialpad');
+  const [tab, setTab]             = useState<'dialpad' | 'recent' | 'copilot' | 'scenario' | 'scripts'>('dialpad');
 
   const [briefGoal, setBriefGoal]       = useState<CallGoal>('cold_call');
   const [briefContext, setBriefContext] = useState('');
@@ -96,9 +95,9 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
   const [scenarioOutcome, setScenarioOutcome] = useState<ScenarioOutcome | null>(null);
 
   const [number, setNumber]       = useState('');
+  const [numberClipboardStatus, setNumberClipboardStatus] = useState<string | null>(null);
   const [callState, setCallState] = useState<CallState>('idle');
   const [elapsed, setElapsed]     = useState(0);
-  const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [currentClientId, setCurrentClientId] = useState<string | null>(null);
   const [currentName, setCurrentName] = useState<string | null>(null);
 
@@ -107,11 +106,68 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
 
   const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef  = useRef<number>(0);
+  const numberInputRef = useRef<HTMLInputElement>(null);
+
+  // Telephony store (SIP.js WebRTC).
+  const tState = useTelephony((s) => s.state);
+  const tDial = useTelephony((s) => s.dial);
+  const tHangup = useTelephony((s) => s.hangup);
+  const tAnswer = useTelephony((s) => s.answer);
+  const tReject = useTelephony((s) => s.reject);
+  const tMute = useTelephony((s) => s.mute);
+  const tUnmute = useTelephony((s) => s.unmute);
+  const tHold = useTelephony((s) => s.hold);
+  const tResume = useTelephony((s) => s.resume);
+  const tDtmf = useTelephony((s) => s.dtmf);
+  const tError = useTelephony((s) => s.error);
+  const tActive = useTelephony((s) => s.activeCall);
+
+  // Map telephony state → dialer callState for UI.
+  useEffect(() => {
+    const map: Record<string, CallState> = {
+      OFFLINE: 'idle', CONNECTING: 'idle', REGISTERING: 'idle', READY: 'idle',
+      DIALING: 'dialing', RINGING: 'ringing', INCOMING: 'ringing', CONNECTED: 'active', HOLD: 'active',
+      ENDING: 'ending',
+      ENDED: 'ended', BUSY: 'ended', NO_ANSWER: 'ended', FAILED: 'ended',
+    };
+    setCallState(map[tState] ?? 'idle');
+  }, [tState]);
+
+  useEffect(() => {
+    if (tState === 'INCOMING' && tActive) {
+      setOpen(true); setMinimized(false); setTab('dialpad');
+      setNumber(tActive.remoteNumber); setCurrentName(tActive.remoteName ?? null);
+    }
+  }, [tState, tActive]);
+
+  // Calls started from compact CRM controls (for example Kanban cards) still
+  // need to expose the active dialer so the agent can hang up or use DTMF.
+  useEffect(() => {
+    if (tActive && ['DIALING', 'RINGING', 'CONNECTED', 'HOLD', 'ENDING'].includes(tState)) {
+      setOpen(true);
+      setMinimized(false);
+    }
+  }, [tState, tActive]);
+
+  // Sync elapsed from telephony active call.
+  useEffect(() => {
+    if (tState === 'CONNECTED' && tActive?.answeredAt) {
+      startRef.current = tActive.answeredAt;
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [tState, tActive]);
 
   // Apply prefill when a client card triggers a call
   useEffect(() => {
     if (prefill) {
-      setNumber(prefill.phone);
+      const norm = normalizeGermanNumber(prefill.phone);
+      setNumber(norm.ok ? norm.e164 : prefill.phone);
       setCurrentClientId(prefill.clientId ?? null);
       setCurrentName(prefill.name ?? null);
       setOpen(true);
@@ -164,7 +220,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
     try {
       const session = await createScenarioSession({
         leadId: currentClientId,
-        callLogId: currentCallId,
+        callLogId: null,
         objective: scenarioObjective,
       });
       const step = await generateNextScenarioStep({ objective: scenarioObjective, clientName: currentName, transcript: [] });
@@ -252,18 +308,49 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
     if (tab === 'recent' && open) loadRecent();
   }, [tab, open, loadRecent]);
 
-  // Timer
   useEffect(() => {
-    if (callState === 'active') {
-      startRef.current = Date.now() - elapsed * 1000;
-      timerRef.current = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
+    if (!numberClipboardStatus) return;
+    const timeout = setTimeout(() => setNumberClipboardStatus(null), 2500);
+    return () => clearTimeout(timeout);
+  }, [numberClipboardStatus]);
+
+  const updateNumberInput = useCallback((raw: string) => {
+    const cleaned = raw.replace(/[^\d+*#().\s-]/g, '').trimStart().slice(0, 32);
+    setNumber(cleaned);
+    setNumberClipboardStatus(null);
+  }, []);
+
+  const copyNumber = async () => {
+    const value = number.trim();
+    if (!value) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(value);
+      setNumberClipboardStatus('Number copied');
+    } catch {
+      numberInputRef.current?.focus();
+      numberInputRef.current?.select();
+      setNumberClipboardStatus('Press Ctrl+C to copy');
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [callState]);
+  };
+
+  const pasteNumber = async () => {
+    if (callState !== 'idle') return;
+    try {
+      if (!navigator.clipboard?.readText) throw new Error('Clipboard API unavailable');
+      const value = await navigator.clipboard.readText();
+      if (!value.trim()) {
+        setNumberClipboardStatus('Clipboard is empty');
+        return;
+      }
+      updateNumberInput(value);
+      setNumberClipboardStatus('Number pasted');
+      numberInputRef.current?.focus();
+    } catch {
+      numberInputRef.current?.focus();
+      setNumberClipboardStatus('Press Ctrl+V to paste');
+    }
+  };
 
   // Dialpad press
   const press = (digit: string) => {
@@ -276,52 +363,33 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
     setNumber(prev => prev.slice(0, -1));
   };
 
-  // Initiate call
-  const startCall = async () => {
-    const phone = number.replace(/\D/g, '');
+  // Initiate call — delegates to SIP.js WebRTC via telephony store.
+  const placeCall = async (rawNumber: string, name?: string | null, clientId?: string | null) => {
+    const phone = rawNumber.replace(/\D/g, '');
     if (!phone || callState !== 'idle') return;
+    if (tState !== 'READY') return;
 
-    setCallState('dialing');
+    const norm = normalizeGermanNumber(rawNumber);
+    if (!norm.ok) { setCallState('ended'); setTimeout(() => setCallState('idle'), 1200); return; }
+
     setElapsed(0);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setCallState('idle'); return; }
-
-    const entry = await logCall({
-      agentId:     user.id,
-      clientId:    currentClientId,
-      phoneNumber: phone,
-      direction:   'outbound',
-      status:      'initiated',
-    });
-    setCurrentCallId(entry?.id ?? null);
-
-    // Simulate ringing → active (replace with real provider SDK later)
-    setTimeout(() => setCallState('ringing'), 800);
-    setTimeout(() => {
-      setCallState('active');
-      if (entry?.id) updateCallLog(entry.id, { status: 'answered' });
-    }, 3000);
+    // Telephony store logs the call and updates status on end.
+    await tDial(norm.e164, name ?? undefined, clientId);
   };
+  const startCall = () => placeCall(number, currentName, currentClientId);
 
-  // End call
+  // End call — delegates to SIP.js hangup.
   const endCall = async () => {
-    if (currentCallId) {
-      const finalStatus = callState === 'ringing' ? 'no_answer' : 'completed';
-      await updateCallLog(currentCallId, { status: finalStatus, duration_seconds: elapsed });
-    }
-    setCallState('ended');
-    setTimeout(() => {
-      setCallState('idle');
-      setElapsed(0);
-      setCurrentCallId(null);
-    }, 1500);
+    tHangup();
   };
 
   // Click-to-call from recent
-  const redial = (phone: string) => {
+  const redial = (phone: string, name?: string) => {
+    if (callState !== 'idle' || tState !== 'READY') return;
     setNumber(phone);
-    setTab('dialpad');
+    setCurrentName(name ?? null);
+    setCurrentClientId(null);
+    void placeCall(phone, name);
   };
 
   const handleClose = () => {
@@ -340,7 +408,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
       <button
         onClick={() => setOpen(true)}
         title="Open dialer"
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-aura-emerald shadow-[0_0_24px_rgba(16,185,129,0.5)] hover:shadow-[0_0_32px_rgba(16,185,129,0.7)] flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+        className="fixed bottom-[calc(1.5rem+1cm)] right-[calc(1.5rem+1cm)] z-50 h-14 w-14 rounded-full bg-aura-emerald shadow-[0_0_24px_rgba(16,185,129,0.5)] hover:shadow-[0_0_32px_rgba(16,185,129,0.7)] flex items-center justify-center transition-all hover:scale-110 active:scale-95"
       >
         <Phone className="w-6 h-6 text-black" />
       </button>
@@ -351,7 +419,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
 
   if (minimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 glass-card border-aura-emerald/40 rounded-full px-4 py-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] cursor-pointer" onClick={() => setMinimized(false)}>
+      <div className="fixed bottom-[calc(1.5rem+1cm)] right-[calc(1.5rem+1cm)] z-50 flex items-center gap-2 glass-card border-aura-emerald/40 rounded-full px-4 py-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] cursor-pointer" onClick={() => setMinimized(false)}>
         <span className={`w-2 h-2 rounded-full ${callState === 'active' ? 'bg-aura-emerald animate-pulse' : 'bg-aura-platinum/30'}`} />
         <span className="text-xs font-mono text-aura-platinum">
           {callState === 'active' ? fmtDuration(elapsed) : (number ? fmtPhone(number) : 'Dialer')}
@@ -364,7 +432,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
   // ── Full dialer panel ─────────────────────────────────────────────────────
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[320px] rounded-2xl border border-glass-border glass-card shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+    <div data-phone-panel className="fixed bottom-[calc(1.5rem+1cm)] right-[calc(1.5rem+1cm)] z-50 w-[320px] rounded-2xl border border-glass-border glass-card shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-glass-border bg-black/30">
@@ -373,18 +441,18 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
           <span className="text-xs font-bold tracking-[0.15em] uppercase text-aura-platinum">Phone</span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setMinimized(true)} className="p-1.5 rounded hover:bg-white/5 text-aura-platinum/40 hover:text-aura-platinum transition-colors">
+          <button aria-label="Telefon minimieren" onClick={() => setMinimized(true)} className="p-1.5 rounded hover:bg-white/5 text-aura-platinum/40 hover:text-aura-platinum transition-colors">
             <Minimize2 className="w-3.5 h-3.5" />
           </button>
-          <button onClick={handleClose} disabled={callState === 'active' || callState === 'ringing' || callState === 'dialing'} className="p-1.5 rounded hover:bg-white/5 text-aura-platinum/40 hover:text-aura-platinum transition-colors disabled:opacity-30">
+          <button aria-label="Telefon schließen" onClick={handleClose} disabled={callState === 'active' || callState === 'ringing' || callState === 'dialing'} className="p-1.5 rounded hover:bg-white/5 text-aura-platinum/40 hover:text-aura-platinum transition-colors disabled:opacity-30">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-glass-border">
-        {(['dialpad', 'recent', 'copilot', 'scenario'] as const).map(t => (
+      <div data-phone-tabs className="flex border-b border-glass-border">
+        {(['dialpad', 'recent', 'copilot', 'scenario', 'scripts'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -394,15 +462,19 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
           >
             {t === 'copilot' && <Sparkles className="w-2.5 h-2.5" />}
             {t === 'scenario' && <Bot className="w-2.5 h-2.5" />}
-            {t === 'dialpad' ? 'Dialpad' : t === 'recent' ? 'History' : t === 'copilot' ? 'AI Brief' : 'Scenario'}
+            {t === 'dialpad' ? 'Dialpad' : t === 'recent' ? 'History' : t === 'copilot' ? 'AI Brief' : t === 'scripts' ? 'Skripte' : 'Scenario'}
           </button>
         ))}
       </div>
 
+      {tState === 'INCOMING' && tActive && <div className="p-4 border-b border-glass-border" role="alert"><p className="text-xs text-aura-gold">Eingehender Anruf</p><p className="text-sm text-aura-platinum">{tActive.remoteName || tActive.remoteNumber}</p><div className="flex gap-2 mt-3"><button onClick={tAnswer} className="px-3 py-2 rounded-lg bg-aura-emerald text-black">Annehmen</button><button onClick={tReject} className="px-3 py-2 rounded-lg bg-aura-ruby text-black">Ablehnen</button></div></div>}
+      <div data-phone-content>
+      <PhoneAudioNotice />
+      <div hidden={tab !== 'scripts'}><PhoneScriptPicker /></div>
       {tab === 'dialpad' && (
         <div className="p-4 space-y-4">
 
-          {/* Active call status bar */}
+          {/* Active call status bar + controls */}
           {callState !== 'idle' && callState !== 'ended' && (
             <div className={`rounded-lg px-3 py-2 text-center text-[11px] font-mono border ${
               callState === 'active'  ? 'border-aura-emerald/30 bg-aura-emerald/10 text-aura-emerald' :
@@ -412,6 +484,25 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
               {callState === 'dialing'  && '⬤ Dialing…'}
               {callState === 'ringing'  && '⬤ Ringing…'}
               {callState === 'active'   && `⬤ ${fmtDuration(elapsed)}`}
+            </div>
+          )}
+          {callState === 'active' && (
+            <div className="flex items-center justify-center gap-2">
+              <button onClick={() => (tActive?.muted ? tUnmute() : tMute())} title={tActive?.muted ? 'Unmute' : 'Mute'}
+                className={`p-2 rounded-lg border ${tActive?.muted ? 'border-orange-400/30 bg-orange-400/10 text-orange-400' : 'border-glass-border glass-card text-aura-platinum/60 hover:text-aura-platinum'}`}>
+                {tActive?.muted ? '🔇' : '🎙'}
+              </button>
+              <button onClick={() => (tState === 'HOLD' ? tResume() : tHold())} title={tState === 'HOLD' ? 'Resume' : 'Hold'}
+                className={`p-2 rounded-lg border ${tState === 'HOLD' ? 'border-yellow-400/30 bg-yellow-400/10 text-yellow-400' : 'border-glass-border glass-card text-aura-platinum/60 hover:text-aura-platinum'}`}>
+                {tState === 'HOLD' ? '▶' : '⏸'}
+              </button>
+              <button onClick={() => {
+                const d = prompt('DTMF digit (0-9, *, #):');
+                if (d && /^[0-9*#]$/.test(d)) tDtmf(d);
+              }} title="Send DTMF"
+                className="p-2 rounded-lg border border-glass-border glass-card text-aura-platinum/60 hover:text-aura-platinum">
+                123
+              </button>
             </div>
           )}
           {callState === 'ended' && (
@@ -429,17 +520,37 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
           )}
 
           {/* Number display */}
-          <div className="flex items-center justify-between px-2">
-            <div className="flex-1 text-center">
-              <span className="text-xl font-mono tracking-widest text-aura-platinum">
-                {number ? fmtPhone(number) : <span className="text-aura-platinum/20">Enter number</span>}
-              </span>
-            </div>
+          <div className="space-y-2 px-2">
+            <div className="flex items-center gap-1">
+              <input
+                ref={numberInputRef}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                aria-label="Phone number"
+                value={number}
+                onChange={(event) => updateNumberInput(event.target.value)}
+                readOnly={callState !== 'idle'}
+                placeholder="Enter number"
+                className="min-w-0 flex-1 rounded-lg border border-glass-border bg-black/30 px-3 py-2 text-center text-xl font-mono tracking-widest text-aura-platinum placeholder:text-aura-platinum/20 focus:border-aura-gold/40 focus:outline-none read-only:cursor-default"
+              />
             {number && callState === 'idle' && (
-              <button onClick={backspace} className="p-2 text-aura-platinum/40 hover:text-aura-platinum transition-colors">
+              <button type="button" onClick={backspace} aria-label="Delete last digit" className="p-2 text-aura-platinum/40 hover:text-aura-platinum transition-colors">
                 <Delete className="w-4 h-4" />
               </button>
             )}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <button type="button" onClick={() => void copyNumber()} disabled={!number}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-glass-border px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-aura-platinum/60 transition-colors hover:border-aura-gold/30 hover:text-aura-gold disabled:cursor-not-allowed disabled:opacity-30">
+                <Copy className="h-3 w-3" /> Copy
+              </button>
+              <button type="button" onClick={() => void pasteNumber()} disabled={callState !== 'idle'}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-glass-border px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-aura-platinum/60 transition-colors hover:border-aura-gold/30 hover:text-aura-gold disabled:cursor-not-allowed disabled:opacity-30">
+                <ClipboardPaste className="h-3 w-3" /> Paste
+              </button>
+            </div>
+            {numberClipboardStatus && <p role="status" className="text-center text-[10px] text-aura-platinum/50">{numberClipboardStatus}</p>}
           </div>
 
           {/* Dialpad grid */}
@@ -447,7 +558,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
             {DIALPAD.map(([digit, sub]) => (
               <button
                 key={digit}
-                onMouseDown={() => press(digit)}
+                onClick={() => press(digit)}
                 disabled={callState !== 'idle'}
                 className="flex flex-col items-center justify-center h-12 rounded-xl border border-glass-border glass-card hover:bg-white/5 hover:border-aura-gold/20 active:bg-aura-gold/10 transition-all disabled:opacity-40 select-none"
               >
@@ -457,30 +568,11 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
             ))}
           </div>
 
-          {/* Call / End button */}
-          <div className="flex justify-center pt-1">
-            {callState === 'idle' || callState === 'ended' ? (
-              <button
-                onClick={startCall}
-                disabled={!number || callState === 'ended'}
-                className="h-14 w-14 rounded-full bg-aura-emerald hover:bg-aura-emerald/90 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_28px_rgba(16,185,129,0.6)] flex items-center justify-center transition-all disabled:opacity-30 disabled:shadow-none"
-              >
-                <Phone className="w-6 h-6 text-black" />
-              </button>
-            ) : (
-              <button
-                onClick={endCall}
-                className="h-14 w-14 rounded-full bg-aura-ruby hover:bg-aura-ruby/90 shadow-[0_0_20px_rgba(251,113,133,0.4)] flex items-center justify-center transition-all animate-pulse"
-              >
-                <PhoneOff className="w-6 h-6 text-white" />
-              </button>
-            )}
-          </div>
         </div>
       )}
 
       {tab === 'recent' && (
-        <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar">
           {loadingRecent ? (
             <div className="flex items-center justify-center py-10">
               <span className="text-xs text-aura-platinum/30 animate-pulse">Loading…</span>
@@ -517,9 +609,11 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
                     </div>
                   </div>
                   <button
-                    onClick={() => redial(c.phone)}
-                    title="Redial"
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-aura-emerald/10 text-aura-emerald hover:bg-aura-emerald/20 transition-all"
+                    onClick={() => redial(c.phone, c.name)}
+                    aria-label={`Erneut anrufen: ${c.name ?? c.phone}`}
+                    title="Erneut anrufen"
+                    disabled={callState !== 'idle' || tState !== 'READY'}
+                    className="phone-history-call shrink-0 min-h-11 min-w-11 flex items-center justify-center p-2 rounded-lg bg-aura-emerald/10 text-aura-emerald hover:bg-aura-emerald/20 transition-all disabled:opacity-40"
                   >
                     <Phone className="w-3 h-3" />
                   </button>
@@ -531,7 +625,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
       )}
 
       {tab === 'copilot' && (
-        <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar">
+        <div className="p-4 space-y-3 overflow-y-auto custom-scrollbar">
           <p className="text-[9px] text-aura-platinum/40 leading-relaxed">
             Generates talking points for YOU to use on your own call. It never contacts the client and never guarantees any outcome — always state risk clearly and let the client decide.
           </p>
@@ -646,7 +740,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
       )}
 
       {tab === 'scenario' && (
-        <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar">
+        <div className="p-4 space-y-3 overflow-y-auto custom-scrollbar">
           <p className="text-[9px] text-aura-platinum/40 leading-relaxed">
             Plans the call turn by turn. No telephony provider is connected (see Telephony Settings) — YOU place the call, read each suggested line, and type back what the client actually said.
           </p>
@@ -761,6 +855,16 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
           )}
         </div>
       )}
+      </div>
+      <div data-phone-actions className="shrink-0 border-t border-glass-border bg-[#0a0a0f]/95 px-4 py-3 space-y-2">
+        {tab !== 'dialpad' && <input ref={numberInputRef} type="tel" inputMode="tel" autoComplete="tel" aria-label="Rufnummer" placeholder="Rufnummer mit Ländercode …" value={number} onChange={(event) => updateNumberInput(event.target.value)} readOnly={callState !== 'idle'} className="w-full rounded-lg border border-glass-border bg-black/30 px-3 py-2 text-sm text-aura-platinum" />}
+        {tError && <p role="alert" className="text-xs text-aura-ruby">{tError}</p>}
+        {callState === 'idle' || callState === 'ended' ? <button type="button" aria-label="Anrufen" onClick={startCall} disabled={!number || callState !== 'idle' || tState !== 'READY'} className="w-full min-h-12 rounded-xl bg-aura-emerald text-black flex items-center justify-center gap-2 px-3 py-2 font-semibold disabled:opacity-40">
+          <Phone className="w-5 h-5" /> Anrufen
+        </button> : <button type="button" aria-label={callState === 'ending' ? 'Ending call' : 'Auflegen'} onClick={endCall} disabled={callState === 'ending'} className="w-full min-h-12 rounded-xl bg-aura-ruby text-white flex items-center justify-center gap-2 px-3 py-2 font-semibold disabled:opacity-50">
+          <PhoneOff className="w-5 h-5" /> {callState === 'ending' ? 'Ending…' : 'Auflegen'} {callState === 'active' && <span className="font-mono">{fmtDuration(elapsed)}</span>}
+        </button>}
+      </div>
     </div>
   );
 }

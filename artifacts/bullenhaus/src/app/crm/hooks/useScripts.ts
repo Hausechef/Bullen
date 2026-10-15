@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase/browserClient';
+import { localizeSalesScript } from '../data/salesScripts.de';
 
 export const SCRIPT_CATEGORIES = [
-  { value: 'cold_call',          label: 'Cold Call',          color: '#3b82f6' },
-  { value: 'follow_up',          label: 'Follow-up',          color: '#10b981' },
-  { value: 'objection_handling', label: 'Objection Handling', color: '#f59e0b' },
-  { value: 'closing',            label: 'Closing',            color: '#a855f7' },
-  { value: 'kyc_help',           label: 'KYC Help',           color: '#06b6d4' },
-  { value: 'general',            label: 'General',            color: '#64748b' },
+  { value: 'cold_call',          label: 'Erstkontakt',          color: '#3b82f6' },
+  { value: 'follow_up',          label: 'Nachfassen',          color: '#10b981' },
+  { value: 'objection_handling', label: 'Einwandbehandlung', color: '#f59e0b' },
+  { value: 'closing',            label: 'Abschluss',            color: '#a855f7' },
+  { value: 'kyc_help',           label: 'KYC-Hilfe',           color: '#06b6d4' },
+  { value: 'general',            label: 'Allgemein',            color: '#64748b' },
 ] as const;
 
 const SCRIPTS_SELECT = 'id, title, category, stage, body, objections, tags, created_at, updated_at';
@@ -23,12 +24,11 @@ export function useScripts(filter: { category?: string; search?: string } = {}) 
     try {
       let q = supabase.from('sales_scripts').select(SCRIPTS_SELECT).order('category', { ascending: true });
       if (filter.category) q = q.eq('category', filter.category);
-      if (filter.search) {
-        q = q.or(`title.ilike.%${filter.search}%,body.ilike.%${filter.search}%`);
-      }
       const { data, error } = await q;
       if (error) throw new Error(error.message);
-      setScripts(data || []);
+      const localized = (data || []).map(localizeSalesScript);
+      const search = filter.search?.trim().toLocaleLowerCase('de');
+      setScripts(search ? localized.filter((script) => `${script.title} ${script.body} ${script.objections.join(' ')}`.toLocaleLowerCase('de').includes(search)) : localized);
     } catch (e: any) {
       setError(e.message);
     } finally {

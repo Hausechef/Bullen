@@ -17,6 +17,7 @@ import { AuthGuard } from './components/guards/AuthGuard';
 import { RoleGuard } from './components/guards/RoleGuard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { GoldDefs } from './app/trading/components/common/LuxIcon';
+import { TelephonyProvider } from './telephony/TelephonyProvider';
 
 // Global Auth Pages
 import LoginPage from './app/login/LoginPage';
@@ -118,6 +119,10 @@ import { PhoneDialerProvider } from './app/crm/contexts/PhoneDialerContext';
 
 const CRMAppWrapper = () => {
   const { role, signOut } = useAuth();
+  React.useEffect(() => {
+    document.documentElement.dataset.crmGlass = 'true';
+    return () => { delete document.documentElement.dataset.crmGlass; };
+  }, []);
 
   if (!role) return <Fallback />;
 
@@ -302,7 +307,9 @@ export default function App() {
     <ErrorBoundary>
       <GoldDefs />
       <AuthProvider>
-        <AppContent />
+        <TelephonyProvider>
+          <AppContent />
+        </TelephonyProvider>
         <Toaster theme="dark" position="top-right" richColors />
       </AuthProvider>
     </ErrorBoundary>

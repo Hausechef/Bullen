@@ -1,3 +1,5 @@
+import { loginText } from './loginLanguage';
+import { loginFailure } from './loginError';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Mail, Lock, AlertCircle, X, ArrowRight } from 'lucide-react';
@@ -26,20 +28,26 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDiagnostic, setErrorDiagnostic] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
   const { signInMockAdmin, signInMockClient, signInMockAgent } = useAuth();
   const emailRef = useRef<HTMLInputElement>(null);
+  const onCloseRef = useRef(onClose);
   const panelId = useId();
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     document.addEventListener('keydown', onKey);
     const t = setTimeout(() => emailRef.current?.focus(), 60);
     return () => { document.removeEventListener('keydown', onKey); clearTimeout(t); };
-  }, [open, onClose]);
+  }, [open]);
 
   const close = () => {
     onClose();
@@ -50,6 +58,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setErrorDiagnostic('');
     try {
       const requestedTarget = getSafeNextPath(location.search);
 
@@ -62,7 +71,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
         return;
       }
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) throw signInError;
 
       let role: UnifiedRole = 'client';
@@ -96,13 +105,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
         ? dashboard
         : requestedTarget;
       navigate(finalTarget, { replace: true });
-    } catch (err: any) {
-      const msg = err?.message || '';
-      if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) setError('Account pending activation. Please contact support to verify your account.');
-      else if (msg.includes('Invalid login credentials')) setError('Invalid email or password. Please try again.');
-      else if (msg.includes('Too many requests')) setError('Too many attempts. Please wait a few minutes and try again.');
-      else if (msg.includes('Failed to fetch')) setError('Network error. Please check your connection and try again.');
-      else setError('Unable to sign in. Please check your credentials or contact support.');
+    } catch (err: unknown) {
+      const failure = loginFailure(err);
+      setError(failure.message);
+      setErrorDiagnostic(failure.diagnostic);
     } finally {
       setLoading(false);
     }
@@ -128,7 +134,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
             id={labelledById}
             role="dialog"
             aria-modal="true"
-            aria-label="Log in to your account"
+            aria-label={loginText("Log in to your account")}
             initial={{ opacity: 0, y: -12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.98 }}
@@ -139,12 +145,12 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
 
             <div className="mb-5 flex items-start justify-between">
               <div>
-                <p className="label-eyebrow">Terminal access</p>
-                <h2 className="mt-1 font-serif text-xl font-semibold text-text">Welcome back</h2>
+                <p className="label-eyebrow">{loginText("Terminal access")}</p>
+                <h2 className="mt-1 font-serif text-xl font-semibold text-text">{loginText("Welcome back")}</h2>
               </div>
               <button
                 onClick={close}
-                aria-label="Close login"
+                aria-label={loginText("Close login")}
                 className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-white/5 hover:text-text"
               >
                 <X size={18} />
@@ -152,15 +158,15 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
             </div>
 
             {error && (
-              <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-danger/30 bg-danger-soft p-3">
+              <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-danger/30 bg-danger-soft p-3">
                 <AlertCircle className="mt-0.5 shrink-0 text-danger" size={15} />
-                <p className="text-xs text-danger">{error}</p>
+                <div className="text-xs text-danger"><p>{loginText(error)}</p>{errorDiagnostic && <p className="mt-1 font-mono" data-login-error-code>{errorDiagnostic}</p>}</div>
               </div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-4 text-left">
               <div>
-                <label htmlFor={`${panelId}-email`} className="label-eyebrow mb-1.5 block">Email or Login</label>
+                <label htmlFor={`${panelId}-email`} className="label-eyebrow mb-1.5 block">{loginText("Email or Login")}</label>
                 <div className="relative">
                   <Mail size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-dim" />
                   <input
@@ -178,7 +184,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
               </div>
 
               <div>
-                <label htmlFor={`${panelId}-pass`} className="label-eyebrow mb-1.5 block">Password</label>
+                <label htmlFor={`${panelId}-pass`} className="label-eyebrow mb-1.5 block">{loginText("Password")}</label>
                 <div className="relative">
                   <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-dim" />
                   <input
@@ -202,32 +208,29 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ open, onClose, returnFoc
                     onChange={(e) => setRemember(e.target.checked)}
                     className="h-4 w-4 rounded border-border bg-surface-2 accent-[var(--color-gold)]"
                   />
-                  Remember me
-                </label>
+                  {loginText("Remember me")}</label>
                 <button
                   type="button"
                   onClick={() => { close(); navigate('/forgot-password'); }}
                   className="text-xs font-medium text-gold transition-colors hover:text-gold-light"
                 >
-                  Forgot password?
-                </button>
+                  {loginText("Forgot password?")}</button>
               </div>
 
               <button type="submit" disabled={loading} className="btn-gold mt-1 w-full">
                 {loading
                   ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                  : <>Log In <ArrowRight size={16} /></>}
+                  : <>{loginText("Log In")}<ArrowRight size={16} /></>}
               </button>
             </form>
 
             <div className="mt-5 border-t border-border pt-4 text-center text-xs text-text-muted">
-              New to Bullenhaus?{' '}
+              {loginText("New to Bullenhaus?")}{' '}
               <button
                 onClick={() => { close(); navigate('/register'); }}
                 className="font-bold text-gold transition-colors hover:text-gold-light"
               >
-                Apply for access
-              </button>
+                {loginText("Apply for access")}</button>
             </div>
           </motion.div>
         </>

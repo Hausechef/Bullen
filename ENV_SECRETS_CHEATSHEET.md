@@ -35,6 +35,10 @@ Loaded by `bullenhaus-api.service` via `EnvironmentFile=-/etc/bullenhaus/api.env
 | `APP_URL` | yes | `https://app.bullenhaus.com` | Canonical origin for TRAPAY callback URLs and webhook URL. Must be HTTPS in production. |
 | `VITE_SUPABASE_URL` or `SUPABASE_URL` | yes | `https://qktqfedvfqxhrtjnmzmi.supabase.co` | Cloud Supabase URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | `eyJhbGciOiJIUzI1NiIs...` | **Never expose to browser** |
+| `BULLENHAUS_SIP_101_PASSWORD` | yes for agent telephony | stored value from Asterisk PJSIP endpoint 101 | Server-only; `/api/telephony/config` returns it only to an authenticated `agent` and never logs it |
+| `BULLENHAUS_SIP_101_USER` | no | `101` | SIP extension used by the agent dialer |
+| `BULLENHAUS_PBX_SIP_DOMAIN` | no | `bullenhaus.st` | Public SIP domain |
+| `BULLENHAUS_PBX_WSS_URL` | no | `wss://pbx.bullenhaus.st/ws` | Public Asterisk WSS endpoint |
 | `TRAPAY_SECRET_ENC_KEY` | yes | `openssl rand -hex 32` | 32-byte hex/base64; used to encrypt TRAPAY API secret at rest |
 | `OPENROUTER_API_KEY` | no | `sk-or-...` | Required for AI chat (AI Core) |
 | `AI_PROVIDER` | no | `openrouter` | |

@@ -7,6 +7,7 @@ import { crmService } from '../../services/crmService';
 import { getAttribution } from '../../hooks/useAttribution';
 import { COUNTRIES, type Country } from '../../../crm/data/countries';
 import { useTranslation } from 'react-i18next';
+import { withCallingCode } from '../../../../lib/phoneNumbers';
 
 export const Register: React.FC = () => {
   const { t } = useTranslation('common');
@@ -22,7 +23,7 @@ export const Register: React.FC = () => {
   const [error,     setError]     = useState<string | null>(null);
   const [success,   setSuccess]   = useState(false);
 
-  const fullPhone = country && localPhone.trim() ? `${country.dialCode}${localPhone.trim().replace(/^0/, '')}` : '';
+  const fullPhone = country ? withCallingCode(localPhone, country.dialCode) : '';
   const fullName  = `${firstName.trim()} ${lastName.trim()}`.trim();
 
   const handleCountryChange = (code: string) => {
@@ -89,7 +90,7 @@ export const Register: React.FC = () => {
             country:    country.name,
             phone:      fullPhone,
           }, { onConflict: 'id' });
-        } catch (_) { /* Non-fatal — trigger may handle this */ }
+        } catch { /* Non-fatal — trigger may handle this */ }
       }
 
       // Register in CRM
@@ -112,7 +113,7 @@ export const Register: React.FC = () => {
             ...(attribution ? { attribution } : {}),
           }, userSession?.access_token);
         }
-      } catch (_) {
+      } catch {
         // Non-fatal CRM error
       }
 

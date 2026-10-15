@@ -1,0 +1,102 @@
+/* Shared mobile controls. Desktop styling and semantic action colours stay intact. */
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  :is(button, [role="button"], [data-slot="button"], input[type="button"], input[type="submit"], input[type="reset"], a.inline-flex, a[class*="rounded"][class*="px-"]):not([role="checkbox"]):not([role="switch"]) {
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :is(button, [role="button"], [data-slot="button"]):not([role="checkbox"]):not([role="switch"]) {
+    font-size: max(13px, 1em);
+  }
+  :is(button, [data-slot="button"])[class*="tracking-"] { letter-spacing: .045em; }
+  :is(button, a)[class*="group-hover:opacity-100"] { opacity: 1; }
+  nav a { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; }
+  nav[class*="flex"] { flex-wrap: wrap; gap: 8px; }
+  :where(main, [role="dialog"], [data-slot="sheet-content"]) .flex:has(> :is(button, [data-slot="button"])):not([role="tablist"]) {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]), select, textarea) {
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  :is(button, [role="button"], [data-slot="button"], nav a):focus-visible {
+    outline: 2px solid #e8c873;
+    outline-offset: 3px;
+  }
+  [data-slot="sheet-content"] {
+    max-width: calc(100vw - 16px);
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  [data-slot="sheet-content"] > .flex.h-full { height: auto; min-height: 100%; }
+  [data-slot="sheet-content"] > button { top: 8px; right: 8px; display: inline-flex; align-items: center; justify-content: center; }
+  [data-slot="sheet-content"] [data-slot="sheet-title"] { padding-right: 40px; }
+  [role="dialog"]:not([data-slot="sheet-content"]) { max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
+
+  /* The CRM layout must be allowed to shrink around horizontally scrolling data. */
+  .min-h-screen.bg-aura-black.flex > .flex-1 { min-width: 0; height: 100dvh; }
+  html[data-crm-glass="true"] main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  html[data-crm-glass="true"] header { height: auto; min-height: 64px; gap: 8px; padding-block: 8px; }
+  html[data-crm-glass="true"] header h1 { white-space: normal; font-size: 16px; line-height: 1.3; }
+
+  /* Phone: full labels, thumb-friendly controls and safe-area clearance. */
+  :is([data-phone-panel], div.fixed[class*="shadow-[0_20px_60px_rgba(0,0,0,0.8)]"]) {
+    top: auto !important;
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    width: min(420px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 45;
+  }
+  :is([data-phone-panel], div.fixed[class*="shadow-[0_20px_60px_rgba(0,0,0,0.8)]"]) > .flex:has(> button) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px;
+  }
+  :is([data-phone-panel], div.fixed[class*="shadow-[0_20px_60px_rgba(0,0,0,0.8)]"]) > .flex:has(> button) button {
+    font-size: 12px;
+    letter-spacing: .02em;
+    padding: 8px 4px;
+  }
+  button.fixed[title="Open dialer"], div.fixed[class*="shadow-[0_0_20px_rgba(16,185,129,0.2)]"] {
+    top: auto !important;
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 40;
+  }
+  /* CRM has its own dialer; the global status widget is for the other routes. */
+  html[data-crm-glass="true"] :is([data-telephony-widget], .fixed.bottom-4.right-4.z-\[9999\].w-72) { display: none; }
+  [data-telephony-widget] { max-width: calc(100vw - 24px); }
+  :is(button, [data-slot="button"]):not(:disabled):hover { transform: none; translate: none; }
+  :is(button, [data-slot="button"]):not(:disabled):active { transform: translateY(1px); }
+}
+
+/* Keep the shared call controls in view while history/scripts scroll. */
+[data-phone-panel] { display: flex; flex-direction: column; overflow: hidden !important; max-height: min(70vh, 560px); height: min(70vh, 560px); }
+[data-phone-panel] > :not([data-phone-content]) { flex-shrink: 0; }
+[data-phone-content] { min-height: 0; flex: 1 1 0; overflow-y: auto; overscroll-behavior: contain; }
+[data-phone-content] .custom-scrollbar { max-height: none; overflow-y: visible; }
+[data-phone-actions] { position: relative; z-index: 1; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
+[data-phone-panel] [data-phone-actions] > button { min-height: 48px !important; }
+.phone-history-call { opacity: 1 !important; }
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  [data-phone-panel] [data-phone-tabs] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 8px; }
+  [data-phone-panel] [data-phone-tabs] > button { min-width: 0; min-height: 44px; font-size: 12px; padding: 8px 4px; }
+  [data-phone-panel] [data-phone-actions] > button { min-height: 48px; }
+}

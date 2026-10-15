@@ -1,4 +1,5 @@
 /* CRM module styles — inherits global tokens from /src/index.css. */
+@import "./crm-glass.css";
 
 @reference "tailwindcss";
 

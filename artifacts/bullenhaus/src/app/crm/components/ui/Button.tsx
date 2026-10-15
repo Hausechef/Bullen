@@ -31,7 +31,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded font-bold transition-all duration-300",
+          "inline-flex items-center justify-center gap-2 rounded font-bold transition-all duration-300 max-md:min-h-11 max-md:min-w-11 max-md:whitespace-normal",
           variants[variant],
           sizes[size],
           (disabled || isLoading) && "opacity-50 cursor-not-allowed",

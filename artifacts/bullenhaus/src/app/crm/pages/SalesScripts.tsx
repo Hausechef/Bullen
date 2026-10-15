@@ -6,6 +6,7 @@ import {
   MessageSquareWarning, Phone, TrendingUp, ShieldCheck,
 } from 'lucide-react';
 import { useScripts, SCRIPT_CATEGORIES } from '../hooks/useScripts';
+import { SCRIPT_STAGE_DE } from '../data/salesScripts.de';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Drawer } from '../components/ui/Drawer';
@@ -43,7 +44,7 @@ function ScriptCard({ script, onOpen }: { script: any, onOpen: () => void }) {
               {cat?.label}
             </span>
             {script.stage && (
-              <span className="text-[9px] text-aura-platinum/40 uppercase">{script.stage.replace(/_/g, ' ')}</span>
+              <span className="text-[9px] text-aura-platinum/40 uppercase">{SCRIPT_STAGE_DE[script.stage.toLowerCase()] ?? script.stage.replace(/_/g, ' ')}</span>
             )}
           </div>
         </div>
@@ -51,7 +52,7 @@ function ScriptCard({ script, onOpen }: { script: any, onOpen: () => void }) {
       <p className="text-[10px] text-aura-platinum/50 line-clamp-2 mb-2">{script.body}</p>
       {objections.length > 0 && (
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[8px] text-aura-platinum/40 uppercase tracking-wider">Triggers:</span>
+          <span className="text-[8px] text-aura-platinum/40 uppercase tracking-wider">Einwände:</span>
           {objections.slice(0, 3).map((o: string, i: number) => (
             <span key={i} className="text-[8px] text-amber-400/80 bg-amber-500/10 px-1 rounded">"{o}"</span>
           ))}
@@ -70,11 +71,11 @@ function ScriptDetail({ script, onClose, onDelete }: { script: any, onClose: () 
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(script.body);
-    toast.success('Script copied to clipboard');
+    toast.success('Skript in die Zwischenablage kopiert');
   };
 
   return (
-    <Drawer isOpen={!!script} onClose={onClose} title="Script Details" width="max-w-xl">
+    <Drawer isOpen={!!script} onClose={onClose} title="Skriptdetails" width="max-w-xl">
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -82,7 +83,7 @@ function ScriptDetail({ script, onClose, onDelete }: { script: any, onClose: () 
               {cat?.label}
             </span>
             {script.stage && (
-              <span className="text-[9px] text-aura-platinum/50 uppercase">{script.stage.replace(/_/g, ' ')}</span>
+              <span className="text-[9px] text-aura-platinum/50 uppercase">{SCRIPT_STAGE_DE[script.stage.toLowerCase()] ?? script.stage.replace(/_/g, ' ')}</span>
             )}
           </div>
           <h3 className="font-serif text-xl text-aura-platinum">{script.title}</h3>
@@ -94,7 +95,7 @@ function ScriptDetail({ script, onClose, onDelete }: { script: any, onClose: () 
 
         {objections.length > 0 && (
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-aura-platinum/60 mb-2">Triggers (auto-suggest when client says)</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-aura-platinum/60 mb-2">Passende Einwände (Aussagen des Kunden)</p>
             <div className="flex flex-wrap gap-1.5">
               {objections.map((o: string, i: number) => (
                 <span key={i} className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">"{o}"</span>
@@ -116,10 +117,10 @@ function ScriptDetail({ script, onClose, onDelete }: { script: any, onClose: () 
 
         <div className="flex gap-2 pt-2">
           <Button variant="primary" size="sm" onClick={copyToClipboard}>
-            <Copy size={12} /> Copy Script
+            <Copy size={12} /> Skript kopieren
           </Button>
           <Button variant="danger" size="sm" onClick={onDelete}>
-            <Trash2 size={12} /> Delete
+            <Trash2 size={12} /> Löschen
           </Button>
         </div>
       </div>
@@ -146,7 +147,7 @@ function CreateScriptModal({ open, onClose, onCreated }: { open: boolean, onClos
         body: body.trim(),
         objections: objections.split(',').map((s) => s.trim()).filter(Boolean),
       });
-      toast.success('Script created');
+      toast.success('Skript erstellt');
       setTitle('');
       setBody('');
       setObjections('');
@@ -160,13 +161,13 @@ function CreateScriptModal({ open, onClose, onCreated }: { open: boolean, onClos
   };
 
   return (
-    <Modal isOpen={open} onClose={onClose} title="New Sales Script" maxWidth="max-w-lg">
+    <Modal isOpen={open} onClose={onClose} title="Neues Gesprächsskript" maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Script title (e.g. Cold Call Opening)"
+          placeholder="Skripttitel (z. B. Erstkontakt)"
           className="w-full rounded-lg border border-white/8 bg-black/30 px-3 py-2 text-[12px] text-aura-platinum focus:border-gold/40 focus:outline-none"
         />
         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-lg border border-white/8 bg-black/30 px-3 py-2 text-[12px] text-aura-platinum focus:border-gold/40 focus:outline-none">
@@ -176,19 +177,19 @@ function CreateScriptModal({ open, onClose, onCreated }: { open: boolean, onClos
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={6}
-          placeholder="Script body... Use {name} for client name placeholder"
+          placeholder="Skripttext … Verwenden Sie {name} als Platzhalter für den Kundennamen"
           className="w-full rounded-lg border border-white/8 bg-black/30 px-3 py-2 text-[12px] text-aura-platinum focus:border-gold/40 focus:outline-none resize-none"
         />
         <input
           value={objections}
           onChange={(e) => setObjections(e.target.value)}
-          placeholder="Triggers (comma-separated: think, consider, not sure)"
+          placeholder="Einwände, durch Kommas getrennt"
           className="w-full rounded-lg border border-white/8 bg-black/30 px-3 py-2 text-[12px] text-aura-platinum focus:border-gold/40 focus:outline-none"
         />
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} type="button">Cancel</Button>
+          <Button variant="ghost" size="sm" onClick={onClose} type="button">Abbrechen</Button>
           <Button variant="primary" size="sm" type="submit" disabled={saving || !title.trim() || !body.trim()}>
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Create
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Erstellen
           </Button>
         </div>
       </form>
@@ -222,12 +223,12 @@ export const SalesScripts = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="h-5 w-1 bg-gradient-to-b from-gold to-gold/40 rounded-full shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold/80">Knowledge Base</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold/80">Wissensbibliothek</span>
           </div>
-          <h1 className="font-serif text-3xl font-light italic tracking-tight text-aura-platinum">Sales Scripts</h1>
+          <h1 className="font-serif text-3xl font-light italic tracking-tight text-aura-platinum">Gesprächsskripte</h1>
         </div>
         <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
-          <Plus size={14} /> New Script
+          <Plus size={14} /> Neues Skript
         </Button>
       </div>
 
@@ -238,7 +239,7 @@ export const SalesScripts = () => {
             !activeCategory ? 'bg-gold/10 text-gold border border-gold/25' : 'text-aura-platinum/50 hover:bg-white/5'
           }`}
         >
-          All ({scripts.length})
+          Alle ({scripts.length})
         </button>
         {SCRIPT_CATEGORIES.map((c) => {
           const count = grouped[c.value]?.length || 0;
@@ -260,7 +261,7 @@ export const SalesScripts = () => {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search scripts..."
+            placeholder="Skripte suchen …"
             className="rounded-lg border border-white/8 bg-black/30 py-1.5 pl-8 pr-3 text-[12px] text-aura-platinum focus:border-gold/40 focus:outline-none w-48"
           />
         </div>
@@ -278,8 +279,8 @@ export const SalesScripts = () => {
       ) : scripts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-aura-platinum/40">
           <BookOpen size={32} className="mb-2 opacity-50" />
-          <p className="text-sm">No scripts found</p>
-          <p className="text-[10px] mt-1">Create your first sales script or objection handler</p>
+          <p className="text-sm">Keine Skripte gefunden</p>
+          <p className="text-[10px] mt-1">Erstellen Sie Ihr erstes Gesprächsskript oder eine Einwandbehandlung</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -298,7 +299,7 @@ export const SalesScripts = () => {
           if (!selectedScript?.id) return;
           try {
             await deleteScript(selectedScript.id);
-            toast.success('Script deleted');
+            toast.success('Skript gelöscht');
             setSelectedScript(null);
           } catch (e: any) {
             toast.error(e.message);
