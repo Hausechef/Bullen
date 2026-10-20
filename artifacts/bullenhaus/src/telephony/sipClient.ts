@@ -8,6 +8,8 @@ import { useG711 } from './codecs';
 import { watchAudioLevel } from './media';
 
 const TERMINATION_TIMEOUT_MS = 8_000;
+const TRANSPORT_RECOVERY_TIMEOUT_MS = 30_000;
+const TRANSPORT_KEEPALIVE_INTERVAL_SECONDS = 15;
 
 // Cleanup must not hold the store's reconnect lock forever. A rejected or late
 // operation is still observed, so it cannot become an unhandled rejection.
@@ -25,7 +27,7 @@ async function settleWithin(operation: () => Promise<unknown>, timeoutMs: number
 
 export interface SipCallbacks {
   onState: (state: TelephonyState) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string | null) => void;
   onCallEnded: (result: CallResult) => void;
   onRemoteStream: (stream: MediaStream) => void;
   onIncoming?: (number: string, name?: string) => void;
@@ -58,6 +60,8 @@ export class SipClient {
   private recovering = false;
   private localHangup = false;
   private terminationTimer: ReturnType<typeof setTimeout> | null = null;
+  private transportRecoveryTimer: ReturnType<typeof setTimeout> | null = null;
+  private transportRecovering = false;
   private shutdown: Promise<void> | null = null;
   private callFailure: CallResult['status'] | null = null;
   private stopToneOnPageHide = () => this.ringback.stop();
@@ -81,7 +85,18 @@ export class SipClient {
       authorizationUsername: this.cfg.sipUser,
       authorizationPassword: this.cfg.sipPassword,
       transportConstructor: Web.Transport,
-      transportOptions: { server: this.cfg.wssUrl },
+      // Asterisk/Caddy may reap a quiet WebSocket after roughly a minute.
+      // SIP.js sends a double-CRLF keepalive before that deadline. Its native
+      // reconnection keeps the same UserAgent/dialog alive while RTP continues.
+      transportOptions: {
+        server: this.cfg.wssUrl,
+        connectionTimeout: 10,
+        keepAliveInterval: TRANSPORT_KEEPALIVE_INTERVAL_SECONDS,
+        keepAliveDebounce: 5,
+        traceSip: false,
+      },
+      reconnectionAttempts: 8,
+      reconnectionDelay: 2,
       sessionDescriptionHandlerFactory: Web.defaultSessionDescriptionHandlerFactory(async () => {
         const track = this.localStream?.getAudioTracks().find((t) => t.readyState === 'live');
         if (!track) throw new Error('Microphone is no longer available');
@@ -101,17 +116,8 @@ export class SipClient {
       logConfiguration: false,
       logLevel: 'error',
       delegate: {
-        onDisconnect: () => {
-          if (this.disposed || this.recovering) return;
-          if (this.session) {
-            this.callFailure = 'FAILED';
-            const session = this.session;
-            void settleWithin(() => session.dispose(), 1000);
-            this.finishSession(session);
-          }
-          this.cb.onError?.('SIP connection lost. Reconnecting…');
-          this.cb.onState('OFFLINE');
-        },
+        onConnect: () => { void this.handleTransportConnect(); },
+        onDisconnect: () => { this.handleTransportDisconnect(); },
         onInvite: (invitation: Invitation) => {
           if (this.disposed || this.recovering || this.session) {
             invitation.reject({ statusCode: 486 }).catch(() => {});
@@ -174,7 +180,14 @@ export class SipClient {
       if (state === RegistererState.Registered) {
         if (!this.session) this.cb.onState('READY');
       } else if (state === RegistererState.Unregistered) {
-        this.cb.onState('OFFLINE');
+        // A registration refresh can fail independently of an established
+        // dialog. Keep its RTP/media alive; after the call ends, isRegistered()
+        // will move the store offline and TelephonyProvider will rebuild it.
+        if (this.session?.state === SessionState.Established) {
+          this.cb.onError?.('SIP registration lost. The active call is being kept alive…');
+        } else {
+          this.cb.onState('OFFLINE');
+        }
       }
     });
     try {
@@ -324,6 +337,67 @@ export class SipClient {
   private clearTerminationTimer(): void {
     if (this.terminationTimer) clearTimeout(this.terminationTimer);
     this.terminationTimer = null;
+  }
+
+  private clearTransportRecoveryTimer(): void {
+    if (this.transportRecoveryTimer) clearTimeout(this.transportRecoveryTimer);
+    this.transportRecoveryTimer = null;
+  }
+
+  private handleTransportDisconnect(): void {
+    if (this.disposed || this.recovering) return;
+    this.transportRecovering = true;
+    this.clearTransportRecoveryTimer();
+    const session = this.session;
+    const activeMedia = session?.state === SessionState.Established;
+    this.cb.onError?.(activeMedia
+      ? 'SIP signalling interrupted. The call is being kept active while the phone reconnects…'
+      : 'SIP connection lost. Reconnecting…');
+    // Do not advertise OFFLINE during an established call. TelephonyProvider
+    // treats OFFLINE as permission to dispose this client, which would also
+    // close a healthy peer connection and cause the observed 50–60 second cut.
+    if (!activeMedia) this.cb.onState('CONNECTING');
+    this.transportRecoveryTimer = setTimeout(() => {
+      this.transportRecoveryTimer = null;
+      void this.failTransportRecovery(session);
+    }, TRANSPORT_RECOVERY_TIMEOUT_MS);
+  }
+
+  private async handleTransportConnect(): Promise<void> {
+    // The first connect is followed by register() in connect(). This path only
+    // handles a transport which came back after an unexpected disconnect.
+    if (this.disposed || this.recovering || !this.transportRecovering) return;
+    this.transportRecovering = false;
+    this.clearTransportRecoveryTimer();
+    const session = this.session;
+    const registerer = this.registerer;
+    const registrationRefreshed = !registerer || await settleWithin(() => registerer.register(), 5_000);
+    // A second disconnect may race with the asynchronous REGISTER refresh.
+    // Leave the newer recovery attempt in control instead of publishing a
+    // stale CONNECTED/READY state from this callback.
+    if (this.disposed || this.recovering || this.transportRecovering || !this.ua?.isConnected()) return;
+    this.cb.onError?.(registrationRefreshed ? null : 'SIP reconnected, but registration refresh failed. Reconnecting phone…');
+    if (session && this.session === session) {
+      if (session.state === SessionState.Established) {
+        this.cb.onState(this.onHold ? 'HOLD' : 'CONNECTED');
+      } else if (session.state === SessionState.Terminating) {
+        this.beginTermination(session);
+      }
+      return;
+    }
+    this.cb.onState(registrationRefreshed && this.isRegistered() ? 'READY' : 'OFFLINE');
+  }
+
+  private async failTransportRecovery(sessionAtDisconnect: Session | null): Promise<void> {
+    if (this.disposed || this.recovering || !this.transportRecovering) return;
+    this.transportRecovering = false;
+    this.cb.onError?.('SIP reconnection timed out. Reconnecting phone…');
+    if (sessionAtDisconnect && this.session === sessionAtDisconnect) {
+      this.callFailure = 'FAILED';
+      await settleWithin(() => sessionAtDisconnect.dispose(), 1_000);
+      if (this.session === sessionAtDisconnect) this.finishSession(sessionAtDisconnect);
+    }
+    if (!this.disposed) this.cb.onState('OFFLINE');
   }
 
   private beginTermination(session: Session): void {
@@ -531,6 +605,8 @@ export class SipClient {
     if (this.shutdown) return this.shutdown;
     this.disposed = true;
     this.clearTerminationTimer();
+    this.clearTransportRecoveryTimer();
+    this.transportRecovering = false;
     window.removeEventListener('pagehide', this.stopToneOnPageHide);
     this.ringback.dispose();
     this.clearMedia();

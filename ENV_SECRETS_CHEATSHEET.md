@@ -16,7 +16,7 @@ Set these in your local build environment or CI before running `pnpm --filter @w
 |----------|----------|---------|-------|
 | `VITE_SUPABASE_URL` | yes | `https://qktqfedvfqxhrtjnmzmi.supabase.co` | Same for all apps |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | yes | `eyJhbGciOiJIUzI1NiIs...` | Browser-safe anon key |
-| `VITE_RECOVERY_URL` | yes | `https://recover.bullenhaus.com` | Production Recovery origin (used by Recovery unification links) |
+| `VITE_RECOVERY_URL` | yes | `https://recovery.bullenhaus.st/` | Production Recovery origin (used by Recovery unification links) |
 | `VITE_TEAMCHAT_ENABLED` | no | `false` | **Must be `false` in production** — backend is NOT_IMPLEMENTED |
 
 These end up in the static bundle; never put service-role keys here.
@@ -75,7 +75,7 @@ Loaded by `bullenhaus-recovery.service`. Next.js 16 standalone, binds `127.0.0.1
 | `DATABASE_URL` | yes | `postgresql://postgres.qktqfedvfqxhrtjnmzmi:[pwd]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true` | Prisma-accelerated Supabase connection |
 | `DIRECT_URL` | yes | `postgresql://postgres:[pwd]@db.qktqfedvfqxhrtjnmzmi.supabase.co:5432/postgres` | Direct Supabase connection for migrations |
 | `NEXTAUTH_SECRET` | yes | `openssl rand -base64 32` | Encryption key for NextAuth sessions |
-| `NEXTAUTH_URL` | yes | `https://recover.bullenhaus.com` | Must match public origin |
+| `NEXTAUTH_URL` | yes | `https://recovery.bullenhaus.st/` | Must match public origin |
 | `GOOGLE_CLIENT_ID` | maybe | `.apps.googleusercontent.com` | If Google OAuth is enabled |
 | `GOOGLE_CLIENT_SECRET` | maybe | `...` | |
 | `BULLENHAUS_SYNC_SECRET` | yes | `openssl rand -hex 32` | Server-to-server credential shared with main BullenHaus app |
@@ -91,7 +91,7 @@ Loaded by `bullenhaus-recovery.service`. Next.js 16 standalone, binds `127.0.0.1
 ## 4. Verification checklist before privileged deployment
 
 - [ ] `api-server` `typecheck`, `build`, and local start pass.
-- [ ] `bullenhaus` SPA `build` passes with `VITE_TEAMCHAT_ENABLED=false` and `VITE_RECOVERY_URL=https://recover.bullenhaus.com`.
+- [ ] `bullenhaus` SPA `build` passes with `VITE_TEAMCHAT_ENABLED=false` and `VITE_RECOVERY_URL=https://recovery.bullenhaus.st/`.
 - [ ] `Recovery` `build` passes and can start standalone.
 - [ ] Cloud Supabase service-role key is valid and restricted.
 - [ ] `TRAPAY_SECRET_ENC_KEY` generated and stored only on VPS.

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { PhoneDialer } from "../components/PhoneDialer";
 import { useTelephony } from "../../../telephony/callStore";
-import { normalizeGermanNumber } from "../../../telephony/normalize";
+import { normalizeOutboundNumber } from "../../../telephony/normalize";
 
 interface DialerPrefill {
   phone: string;
@@ -32,7 +32,7 @@ export function PhoneDialerProvider({ children, role }: { children: ReactNode; r
   const openDialer = (p?: DialerPrefill) => {
     if (!isAgent) return;
     if (!p) { setPrefill(null); return; }
-    const norm = normalizeGermanNumber(p.phone);
+    const norm = normalizeOutboundNumber(p.phone);
     const phone = norm.ok ? norm.e164 : p.phone;
     // If telephony is ready, dial immediately via WebRTC.
     if (telephonyState === 'READY') {

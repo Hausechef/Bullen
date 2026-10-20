@@ -124,6 +124,9 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const location = useLocation();
   const { signOut, role } = useAuth();
   const currentPath = location.pathname;
+  const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
+  const recoveryUrl = configuredRecoveryUrl || 'https://recovery.bullenhaus.st/';
+  const recoveryIsInternal = recoveryUrl.startsWith('/');
 
   const handleLogout = async () => {
     await signOut();
@@ -188,7 +191,8 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             icon={HeartHandshake}
             iconSrc="/assets/icons/chatbot.png"
             label={t('recovery', { defaultValue: 'Recovery' })}
-            href={((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim() || 'http://localhost:3001/'}
+            to={recoveryIsInternal ? recoveryUrl : undefined}
+            href={recoveryIsInternal ? undefined : recoveryUrl}
             active={currentPath.startsWith('/recovery')}
             onClick={onClose}
           />

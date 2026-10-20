@@ -81,11 +81,11 @@ function PortalLink({ children, href, to, variant }: PortalLinkProps) {
 }
 
 export default function PortalLanding() {
-  // Recovery — отдельное приложение (dev: localhost:3001, деплой: VITE_RECOVERY_URL).
-  // По решению владельца кнопка ведёт именно туда; внутренний /recovery/portal
-  // остаётся резервным входом с общей сессией.
+  // Keep the canonical Recovery deployment as the default while allowing an
+  // explicit environment override for isolated deployments.
   const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
-  const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
+  const recoveryProjectUrl = configuredRecoveryUrl || 'https://recovery.bullenhaus.st/';
+  const recoveryIsInternal = recoveryProjectUrl.startsWith('/');
 
   return (
     <main className="portal-landing">
@@ -99,7 +99,13 @@ export default function PortalLanding() {
       <div className="portal-landing__atmosphere" aria-hidden="true" />
 
       <nav className="portal-actions" aria-label="Choose a Bullenhaus platform">
-        <PortalLink href={recoveryProjectUrl} variant="recovery">Recovery</PortalLink>
+        <PortalLink
+          href={recoveryIsInternal ? undefined : recoveryProjectUrl}
+          to={recoveryIsInternal ? recoveryProjectUrl : undefined}
+          variant="recovery"
+        >
+          Recovery
+        </PortalLink>
         <PortalLink to="/trade" variant="trade">Trade</PortalLink>
       </nav>
     </main>

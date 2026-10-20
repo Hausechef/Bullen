@@ -1,27 +1,28 @@
 // Shared E.164 normalization for international routes supported by the carrier.
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import { withCallingCode } from '../lib/phoneNumbers';
 
 export type NormalizeResult =
   | { ok: true; e164: string }
   | { ok: false; reason: 'EMPTY' | 'INVALID' };
 
-// Unprefixed local numbers still use Germany; explicit international codes are preserved.
+// External calls are country-neutral. Accept an explicit +/00 prefix or a
+// complete country-code number without punctuation; never silently add +49.
 export function normalizeOutboundNumber(raw: string): NormalizeResult {
   const trimmed = (raw ?? '').trim();
   if (!trimmed) return { ok: false, reason: 'EMPTY' };
 
   const compact = trimmed.replace(/[\s().-]/g, '');
-  // Keep the previously supported legacy 049... international spelling.
-  const input = compact.startsWith('049') ? '+' + compact.slice(1) : withCallingCode(trimmed, '+49');
-  const parsed = parsePhoneNumberFromString(input, 'DE');
+  let input: string;
+  if (compact.startsWith('+')) input = compact;
+  else if (compact.startsWith('00')) input = '+' + compact.slice(2);
+  else if (/^[1-9]\d{6,14}$/.test(compact)) input = '+' + compact;
+  else return { ok: false, reason: 'INVALID' };
+
+  const parsed = parsePhoneNumberFromString(input);
   if (!parsed || !parsed.isValid()) return { ok: false, reason: 'INVALID' };
 
   return { ok: true, e164: parsed.number };
 }
-
-// Existing call buttons and lead actions share this compatibility entry point.
-export const normalizeGermanNumber = normalizeOutboundNumber;
 
 export function formatPhoneNumber(raw: string): string {
   const normalized = normalizeOutboundNumber(raw);

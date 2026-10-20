@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import type { TelephonyState, ActiveCall, MicPermission, CallResult, AudioDiagnostics } from './types';
 import { SipClient } from './sipClient';
 import { requestMicPermission, releaseStream, watchDeviceRemoval } from './media';
-import { normalizeGermanNumber } from './normalize';
+import { normalizeOutboundNumber } from './normalize';
 import { logCall, updateCallLog } from '../app/crm/hooks/useCallLogs';
 
 interface TelephonyStore {
@@ -182,9 +182,9 @@ export const useTelephony = create<TelephonyStore>((set, get) => ({
     if (isInternal) {
       e164 = trimmed;
     } else {
-      const norm = normalizeGermanNumber(trimmed);
+      const norm = normalizeOutboundNumber(trimmed);
       if (!norm.ok) {
-        set({ error: 'Ungültige internationale Rufnummer' });
+        set({ error: 'Use an international country code, for example +374…' });
         return;
       }
       e164 = norm.e164;

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import './RecoveryLanding.css';
 
 export function RecoveryLanding() {
-  // Recovery — отдельное приложение (dev: localhost:3001, деплой: VITE_RECOVERY_URL).
+  // Keep the canonical Recovery deployment as the default while allowing an
+  // explicit environment override for isolated deployments.
   const configuredRecoveryUrl = ((import.meta as any).env?.VITE_RECOVERY_URL as string | undefined)?.trim();
-  const recoveryProjectUrl = configuredRecoveryUrl || 'http://localhost:3001/';
+  const recoveryProjectUrl = configuredRecoveryUrl || 'https://recovery.bullenhaus.st/';
+  const recoveryIsInternal = recoveryProjectUrl.startsWith('/');
 
   return (
     <main className="recovery-landing">
@@ -39,12 +41,19 @@ export function RecoveryLanding() {
           <p className="recovery-landing__description">
             A private case workspace for protecting your claim, submitting evidence, and following every recovery milestone.
           </p>
-          {/* Внешнее Recovery-приложение (решение владельца); внутренний
-              /recovery/portal остаётся резервным входом с общей сессией. */}
-          <a className="recovery-landing__cta" href={recoveryProjectUrl}>
-            Enter secure workspace
-            <ArrowRight size={18} aria-hidden="true" />
-          </a>
+          {/* Internal overrides preserve the shared session; the canonical
+              Recovery deployment opens externally from this SPA. */}
+          {recoveryIsInternal ? (
+            <Link className="recovery-landing__cta" to={recoveryProjectUrl}>
+              Enter secure workspace
+              <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          ) : (
+            <a className="recovery-landing__cta" href={recoveryProjectUrl}>
+              Enter secure workspace
+              <ArrowRight size={18} aria-hidden="true" />
+            </a>
+          )}
           <dl className="recovery-landing__assurances" aria-label="Recovery service qualities">
             <div><dt>Private</dt><dd>Client access</dd></div>
             <div><dt>Traceable</dt><dd>Case progress</dd></div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Phone, PhoneOff, PhoneMissed, X, Minimize2, Maximize2, Delete, Clock, User, Sparkles, Loader2, AlertTriangle, Copy, ClipboardPaste, CheckCheck, Bot, Send, LogOut, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase/browserClient";
 import { useTelephony } from "../../../telephony/callStore";
-import { normalizeGermanNumber, formatPhoneNumber } from "../../../telephony/normalize";
+import { normalizeOutboundNumber, formatPhoneNumber } from "../../../telephony/normalize";
 import { PhoneScriptPicker } from './PhoneScriptPicker';
 import { PhoneAudioNotice } from '../../../telephony/PhoneAudioNotice';
 import { generateCallBrief, CALL_GOALS, type CallGoal, type CallBrief } from "../lib/callCopilot";
@@ -166,7 +166,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
   // Apply prefill when a client card triggers a call
   useEffect(() => {
     if (prefill) {
-      const norm = normalizeGermanNumber(prefill.phone);
+      const norm = normalizeOutboundNumber(prefill.phone);
       setNumber(norm.ok ? norm.e164 : prefill.phone);
       setCurrentClientId(prefill.clientId ?? null);
       setCurrentName(prefill.name ?? null);
@@ -369,8 +369,11 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
     if (!phone || callState !== 'idle') return;
     if (tState !== 'READY') return;
 
-    const norm = normalizeGermanNumber(rawNumber);
-    if (!norm.ok) { setCallState('ended'); setTimeout(() => setCallState('idle'), 1200); return; }
+    const norm = normalizeOutboundNumber(rawNumber);
+    if (!norm.ok) {
+      setNumberClipboardStatus('Use a country code, for example +374…');
+      return;
+    }
 
     setElapsed(0);
     // Telephony store logs the call and updates status on end.
@@ -531,7 +534,7 @@ export function PhoneDialer({ prefill, onClearPrefill }: PhoneDialerProps) {
                 value={number}
                 onChange={(event) => updateNumberInput(event.target.value)}
                 readOnly={callState !== 'idle'}
-                placeholder="Enter number"
+                placeholder="Enter international number"
                 className="min-w-0 flex-1 rounded-lg border border-glass-border bg-black/30 px-3 py-2 text-center text-xl font-mono tracking-widest text-aura-platinum placeholder:text-aura-platinum/20 focus:border-aura-gold/40 focus:outline-none read-only:cursor-default"
               />
             {number && callState === 'idle' && (

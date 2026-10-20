@@ -26,4 +26,9 @@ Some bullets combine closely related assertions; the browser execution recorded 
 
 Production release checks: `node scripts/check-telephony-release.mjs <baseline-directory>` checks known local secret values and service-role JWTs without printing them. Public Supabase anon credentials are not classified as private SIP credentials.
 
+Automated command: `pnpm test:telephony` (also included in the workspace `pnpm test` run).
+
+- `check-phone-normalization.mjs` executes the real outbound normalizer and rejects any implicit country prefix.
+- `check-telephony-call-lifecycle.mjs` executes the real Zustand telephony store with explicit SIP/media/logging doubles. It places five sequential Armenian-number attempts, verifies the exact `+37491500065` destination, forces a provider failure after every attempt, and proves that `activeCall` is cleared and the phone returns to `READY` without a page refresh.
+
 Not proven by this fixture: authenticated production REGISTER, PSTN ringing, actual displayed caller ID, simultaneous real calls, microphone intelligibility or two-way audio. Those need a controlled real call and confirmation from its recipient.

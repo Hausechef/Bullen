@@ -3,7 +3,7 @@
 import { Phone } from 'lucide-react';
 import { useTelephony } from './callStore';
 import { useAuth } from '../app/trading/contexts/AuthContext';
-import { normalizeGermanNumber } from './normalize';
+import { normalizeOutboundNumber } from './normalize';
 
 interface CallButtonProps {
   phone: string;
@@ -19,7 +19,7 @@ export function CallButton({ phone, name, clientId, size = 'sm' }: CallButtonPro
 
   const canCall = role === 'agent';
   const ready = state === 'READY';
-  const norm = normalizeGermanNumber(phone);
+  const norm = normalizeOutboundNumber(phone);
   const disabled = !canCall || !ready || !norm.ok;
 
   const handleClick = (e: React.MouseEvent) => {
